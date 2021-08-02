@@ -34,9 +34,9 @@ The following links
 
 It shows how to simulate events from a video. To initialize the C++ sensor:
 ```
-dsi.initSimu([cap.get(cv2.CAP_PROP_FRAME_HEIGHT)], [cap.get(cv2.CAP_PROP_FRAME_WIDTH)])
-dsi.initLatency([200], [50], [50], [300])
-dsi.initContrast([0.3], [0.3], [0.05])
+dsi.initSimu(cap.get(cv2.CAP_PROP_FRAME_HEIGHT), cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+dsi.initLatency(200, 50, 50, 300)
+dsi.initContrast(0.3, 0.3, 0.05)
 init_bgn_hist_cpp("../../data/noise_pos_161lux.npy", "../../data/noise_pos_161lux.npy")
 ```
 The first line initialize the definition of the sensor, then:  
