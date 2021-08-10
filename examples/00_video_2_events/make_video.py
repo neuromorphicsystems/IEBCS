@@ -9,8 +9,9 @@ from dat_files import load_dat_event
 import matplotlib.pyplot as plt
 fourcc = cv2.VideoWriter_fourcc('M', 'J', 'P', 'G')
 filename = 'ev_100_10_100_300_0.3_0.01.dat'
+filename = '../01_Blender/ev_cube.dat'
 ts, x, y, p = load_dat_event(filename)
-res = [720, 1280]
+res = [160, 360] #[720, 1280]
 out = cv2.VideoWriter('{}.avi'.format(filename[:-4]), fourcc, 20.0, (res[1], res[0]))
 tw = 1000
 img = np.zeros((res[0], res[1]), dtype=np.uint8)
@@ -22,7 +23,7 @@ indsurface = np.zeros((res[0], res[1]), dtype=np.uint64)
 for t in range(ts[0], ts[-1], tw):
     ind = np.where((ts > t)&(ts < t + tw))
     tsurface[:, :] = 0
-    tsurface[y[ind], x[ind]] = t + tw
+    tsurface[y[ind], x[ind]] = ts[ind] + tw
     indsurface[y[ind], x[ind]] = p[ind]
     ind = np.where(tsurface > 0)
     img[:, :] = 125

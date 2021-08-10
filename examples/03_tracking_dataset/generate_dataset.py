@@ -15,12 +15,12 @@ if not os.path.exists(dir_res):
 
 # Parameters
 res = [346, 260]
-sensi = [0.15]
-sensi_noise = [0.03]
-lat_comp = [300]
-jit = [100]
-tau_log = [1000]
-ref_per = [100]
+sensi = 0.15
+sensi_noise = 0.03
+lat_comp = 300
+jit = 100
+tau_log = 1000
+ref_per = 100
 radius = np.linalg.norm(res, 2)
 background = 25                   # Smallest brightness seen by the event sensor
 speeds = [100, 1000, 10000]       # px / s
@@ -48,7 +48,7 @@ f.close()
 # Generate sequences
 for i, noise in enumerate(noise_distribs):
     filename = 'Noise_{}'.format(noise_names[i])
-    dsi.initSimu(np.array([res[1]]), np.array([res[0]]))
+    dsi.initSimu(res[1], res[0])
     dsi.initLatency(lat_comp, jit, ref_per, tau_log)
     dsi.initContrast(sensi, sensi, sensi_noise)
     init_bgn_hist_cpp("../../" + noise[0], "../../" + noise[1])
@@ -81,7 +81,7 @@ for i, noise in enumerate(noise_distribs):
                         else:
                             ct = np.zeros((res[1], res[0]))
                         img = 1 + ct * np.exp((background-m)/2.5)
-                        buf = dsi.updateImg(img, [dt])
+                        buf = dsi.updateImg(img, dt)
                         ev_cpp.add_array(np.array(buf["ts"], dtype=np.uint64),
                                          np.array(buf["x"], dtype=np.uint16),
                                          np.array(buf["y"], dtype=np.uint16),
