@@ -59,14 +59,16 @@ This example shows how to render a camera rotating in front of a textured cube. 
 ### 02: Blender custom NMNIST
 
 The NMNIST dataset is simulated (for 10 digits here). 
-The script "generate_textures_MNIST.py" create the texture used in blender to generate the saccadic movement:
-![alt text](data/img/texture.png)  
+The script "generate_textures_MNIST.py" create the texture used in blender to generate the saccadic movement: 
 And the script "saccades_N_MNIST_ONE.py" generates the images from Blender and runs the simulator. Note that compared to the previous example, all the positions of the camera are computed first and then Blender is called to render this sequence faster. 
-![alt text](data/img/nmnist.png)  
 Finally, the script "nmnist_util.py" provides some API to read the spikdes and the labels if you want to use your favorite ML framework.
+
+<img src="data/img/aps_02.gif" alt="drawing" width="50"/>
+<img src="data/img/ev_02.gif" alt="drawing" width="50"/>
 
 ### 03: Tracking dataset
 
 This script generates a tracking dataset with object of various size and contrasts.  
-![alt text](data/img/tracking.png)  
+<img src="data/img/ev_03.gif" alt="drawing" width="300"/> 
+
 Every object has its own spike and groundtruth file.
