@@ -103,7 +103,7 @@ for i, noise in enumerate(noise_distribs):
                     y0 = radius // 2 * np.sin(angle) + res[1] // 2
                     x_gt = x0 + dx / dt * (ev_cpp.get_ts() - t0)
                     y_gt = y0 + dy / dt * (ev_cpp.get_ts() - t0)
-                    events_gt = np.empty(ev_cpp.i, dtype=[('x', np.float), ('y', np.float), ('id', np.uint16), ('ts', np.uint32)])
+                    events_gt = np.empty(ev_cpp.i, dtype=[('x', np.float32), ('y', np.float32), ('id', np.uint16), ('ts', np.uint32)])
                     events_gt['x'] = x_gt
                     events_gt['y'] = y_gt
                     events_gt['id'][:] = id
@@ -112,7 +112,7 @@ for i, noise in enumerate(noise_distribs):
                                    'w') as h5f:
                         g = h5f.create_group("events_GT")
                         g.create_dataset("recording", compression="gzip",
-                                         dtype=[('x', np.float), ('y', np.float), ('id', np.uint16), ('ts', np.uint32)],
+                                         dtype=[('x', np.float32), ('y', np.float32), ('id', np.uint16), ('ts', np.uint32)],
                                          data=events_gt)
 
 
