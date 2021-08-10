@@ -16,10 +16,14 @@ This Figure summarizes the differences with others tools, such as
 
 Tested on Ubuntu 18.04, Python > 3.7. 
 
-Create a virtual environment using conda and Python 3.7, and install the packages listed in reqPython.txt
+Create a virtual environment using conda:
+```
+conda env create -f simuDVSICNS.yml 
+conda activate testSimu
+```
 
 Additionnal requirements: 
-* Blender: exemples 01 and 02 are using Blender 2.79, which needs to be compiled. See [H1](https://wiki.blender.org/wiki/Building_Blender/Linux/Ubuntu) [H2](https://devtalk.blender.org/t/unable-to-compile-blender-2-8-as-python-module/4641/4) for further details. 
+* Blender: exemples 01 and 02 are using Blender 2.79, which needs to be compiled and installed. See [H1](https://wiki.blender.org/wiki/Building_Blender/Linux/Ubuntu) [H2](https://devtalk.blender.org/t/unable-to-compile-blender-2-8-as-python-module/4641/4) for further details. 
 
 * C++: run cpp/compile_test.sh to compile, install 
 and test the module.
@@ -69,6 +73,6 @@ Finally, the script "nmnist_util.py" provides some API to read the spikdes and t
 ### 03: Tracking dataset
 
 This script generates a tracking dataset with object of various size and contrasts.  
-<img src="data/img/ev_03.gif" alt="drawing" width="300"/> 
+<img src="data/img/ev_03.gif" alt="drawing" width="200"/> 
 
 Every object has its own spike and groundtruth file.
