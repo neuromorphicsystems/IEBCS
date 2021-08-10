@@ -155,10 +155,13 @@ bpy.ops.render.render(animation=True)
 
 # Events
 t = 0
+fourcc = cv2.VideoWriter_fourcc('M', 'J', 'P', 'G')
+out = cv2.VideoWriter('nmnist.avi', fourcc, 20.0, (ppsee.def_x, ppsee.def_y))
 for i in range(1, pos_img, 1):
     t = t + dt
     filename = path_NMNIST + 'tmp/tmp_{}_{}/'.format(text_start, text_end) + 'image_annim{0:04}.png'.format(i)
     im = cv2.imread(filename)
+    out.write(im)
     if t == dt:
         ppsee.init_image(im)
     else:
@@ -167,6 +170,6 @@ for i in range(1, pos_img, 1):
         ed.update(ev_buf, dt)
     cv2.imshow("Blender", im)
     cv2.waitKey(10)
-
+out.release()
 ev.write(path_NMNIST + 'events/MNIST_ev_{}_{}_td.dat'.format(text_start, text_end))
 np.save(path_NMNIST + 'labels/MNIST_lab_events_{}_{}.npy'.format(text_start, text_end), lab)
