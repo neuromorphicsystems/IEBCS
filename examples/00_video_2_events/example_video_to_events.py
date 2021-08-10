@@ -18,14 +18,13 @@ jit = 10
 ref = 100
 tau = 300
 th = 0.3
-th_noise = 0.05
+th_noise = 0.01
 cap = cv2.VideoCapture(filename)
 dsi.initSimu(int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)), int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)))
 dsi.initLatency(lat, jit, ref, tau)
 dsi.initContrast(th, th, th_noise)
 init_bgn_hist_cpp("../../data/noise_pos_161lux.npy", "../../data/noise_pos_161lux.npy")
 isInit = False
-dt = int(1e6 / cap.get(cv2.CAP_PROP_FPS))  # dt between two fames of the video
 dt = 1000  # FPS must be 1 kHz
 ev_full = EventBuffer(1)
 ed = EventDisplay("Events", cap.get(cv2.CAP_PROP_FRAME_WIDTH), cap.get(cv2.CAP_PROP_FRAME_HEIGHT), dt*2)
@@ -58,4 +57,4 @@ while cap.isOpened():
             break
 out.release()
 cap.release()
-ev_full.write('ev_{}_{}_{}_{}_{}_{}_nonoise.dat'.format(lat, jit, ref, tau, th, th_noise))
+ev_full.write('ev_{}_{}_{}_{}_{}_{}.dat'.format(lat, jit, ref, tau, th, th_noise))
