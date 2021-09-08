@@ -1,10 +1,13 @@
 # IEBCS
-ICNS Event Based Camera Simulator  
+ICNS Event Based Camera Simulator 
+
+NEW: Available in Matlab.
 
 This repository presents the simulator used at ICNS to assess EBC. It contains:
-*  /cpp/: C++17 implementation of the pixel simulation model and the interface Python/C++. 
+*  /cpp/: C++11 implementation of the pixel simulation model and the interface Python/C++. 
+* /matlab/:
 * /data/: Stores distributions used to sample the noise of the sensor and other resources. 
-* /examples/: Several different ways of using the simulator (see bellow)
+* /examples/: Several different ways of using the simulator (see bellow)'*
 
 This Figure summarizes the differences with others tools, such as 
 [ESIM](https://github.com/uzh-rpg/rpg_esim) and 

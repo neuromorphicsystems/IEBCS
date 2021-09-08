@@ -40,7 +40,6 @@ private:
     vdouble cur_v_;
     vtime time_px_;
     vtime cur_ref_;
-
 	// Thresholds
 	double_t m_th_pos_;
 	double_t m_th_neg_;
@@ -90,11 +89,16 @@ public:
     ~SimuICNS(){
     }
 
-    void setDebug(bool& deb){debug_ = deb;}
+    void setDebug(uint8_t& deb){debug_ = static_cast<uint8_t>(deb);}
 
     bool testShape(uint16_t& x, uint16_t& y){return (x==x_)&&(y==y_);}
+
+    bool testShape(uint32_t& xy){return xy == static_cast<uint32_t>(x_) * static_cast<uint32_t>(y_);}
+
     uint16_t getXShape(){return x_;}
+    
     uint16_t getYShape(){return y_;}
+    
     vdouble getCurV(){return cur_v_;}
 
 	void set_th(const double_t& th_pos, const double_t& th_neg, const double_t& th_noise){
@@ -240,8 +244,15 @@ public:
 	    if(debug_){ std::cout << nb_ev_after - nb_ev_before << " Noise Events Created " << std::endl;}
 	}
 
+    void clamp(double_t& val){
+        if(val < 0)
+            val = 0; 
+        if(val > 1e4)
+            val = 1e4;
+    }
+
 	void update_img(const double_t * img, const uint64_t& dt, std::vector<Event>& ev_pk){
-	    double_t img_l, target, amp;
+	    double_t img_l, target, amp, lat;
 	    uint64_t t_event;
 	    check_noise(dt, ev_pk);
         auto nb_ev_before = ev_pk.size();
@@ -261,7 +272,9 @@ public:
                 while((target - last_v_.at(i) > cur_th_pos_.at(i))&(cur_ref_.at(i) == std::numeric_limits<uint64_t>::max())){
                     amp = (last_v_.at(i) + cur_th_pos_.at(i) - cur_v_.at(i)) / (img_l - cur_v_.at(i));
                     distribution_lat_ = std::normal_distribution<double_t>(m_lat_ - tau_p_.at(i) * std::log(1-amp), std::sqrt(std::pow(m_jit_, 2) + std::pow( m_th_noise_ * tau_p_[i] / (img_l- cur_v_[i]),2)));
-                    t_event = std::clamp(distribution_lat_(generator_lat_), (double_t)0, (double_t)1e4);
+                    lat = distribution_lat_(generator_lat_);
+                    clamp(lat);
+                    t_event = static_cast<double_t>(lat);
                     ev_pk.push_back(Event(i / y_, i % y_, 1, time_px_.at(i) + t_event));
                     cur_ref_.at(i) = time_px_.at(i) + t_event + ref_;
                     cur_th_pos_.at(i) = std::max(0.0, (double_t)distribution_cur_th_pos_(generator_cur_th_pos_));
@@ -275,7 +288,9 @@ public:
                 while((target - last_v_.at(i) < cur_th_neg_.at(i))&(cur_ref_.at(i) == std::numeric_limits<uint64_t>::max())){
                     amp = (last_v_.at(i) + cur_th_neg_.at(i) - cur_v_.at(i)) / (img_l - cur_v_.at(i));
                     distribution_lat_ = std::normal_distribution<double_t>(m_lat_ - tau_p_.at(i) * std::log(1-amp), std::sqrt(std::pow(m_jit_, 2) + std::pow( m_th_noise_ * tau_p_.at(i) / (img_l- cur_v_.at(i)),2)));
-                    t_event = std::clamp(distribution_lat_(generator_lat_), (double_t)0, (double_t)1e4);
+                    lat = distribution_lat_(generator_lat_);
+                    clamp(lat);
+                    t_event = static_cast<double_t>(lat);
                     ev_pk.push_back(Event(i / y_, i % y_, 0, time_px_.at(i) + t_event));
                     cur_ref_.at(i) = time_px_.at(i) + t_event + ref_;
                     cur_th_neg_.at(i) = std::min(0.0,(double_t) distribution_cur_th_neg_(generator_cur_th_neg_));
@@ -293,6 +308,7 @@ public:
         auto nb_ev_after = ev_pk.size();
 	    if(debug_){ std::cout << nb_ev_after - nb_ev_before << " Signal Events Created " << std::endl;}
 	    time_ += dt;
+        std::sort(ev_pk.begin(), ev_pk.end(), [](const Event & a, const Event & b) -> bool{return a.ts_ < b.ts_;});
 	}
 
     void print(){

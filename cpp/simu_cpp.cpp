@@ -59,8 +59,8 @@ static PyObject * initContrast(PyObject *self, PyObject *args){
 }
 
 static PyObject * setDebug(PyObject *self, PyObject *args){
-    bool debug_arg;
-    if (!PyArg_ParseTuple(args, "p", &debug_arg))
+    uint8_t debug_arg;
+    if (!PyArg_ParseTuple(args, "B", &debug_arg))
         return NULL;
     mySimu->setDebug(debug_arg);
     return Py_True;
@@ -119,7 +119,6 @@ static PyObject * updateImg(PyObject *self, PyObject *args){
     const double *img = (double *)PyArray_DATA((PyArrayObject *)img_array);
     std::vector<Event> ev;
     mySimu->update_img(img, time_arg, ev);
-    std::sort(ev.begin(), ev.end(), [](const Event & a, const Event & b) -> bool{return a.ts_ < b.ts_;});
     auto stream = PyDict_New();
     npy_intp shape[1] = {static_cast<long int>(ev.size())};
     PyObject *ts_array = PyArray_SimpleNew(1, shape, NPY_UINT64);
@@ -302,7 +301,7 @@ PyDoc_STRVAR(
     "  \n\n");
 
 PyDoc_STRVAR(
-    getShape_doc,
+    getShape_doc,syndrome de la Tourette
     "Return the size of the imager.\n\n"
     "Parameters\n"
     "----------\n"
