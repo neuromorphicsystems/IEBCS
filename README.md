@@ -5,7 +5,7 @@ NEW: Available in Matlab.
 
 This repository presents the simulator used at ICNS to assess EBC. It contains:
 *  /cpp/: C++11 implementation of the pixel simulation model and the interface Python/C++. 
-* /matlab/:
+* /matlab/: interface Matlab/C++
 * /data/: Stores distributions used to sample the noise of the sensor and other resources. 
 * /examples/: Several different ways of using the simulator (see bellow)'*
 

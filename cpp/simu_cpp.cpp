@@ -301,7 +301,7 @@ PyDoc_STRVAR(
     "  \n\n");
 
 PyDoc_STRVAR(
-    getShape_doc,syndrome de la Tourette
+    getShape_doc,
     "Return the size of the imager.\n\n"
     "Parameters\n"
     "----------\n"
