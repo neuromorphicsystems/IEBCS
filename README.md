@@ -17,10 +17,11 @@ This Figure summarizes the differences with others tools, such as
 
 ## -- Requirements -- 
 
-Tested on Ubuntu 18.04, Python > 3.7. 
+Tested on Ubuntu 18.04, Ubuntu 22.04 with Python 3.8. 
 
-Create a virtual environment using conda:
+Create a virtual environment using conda and make sure that the gxx is up to date with Anaconda:
 ```
+conda install gxx_linux-64
 conda env create -f simuDVSICNS.yml 
 conda activate testSimu
 ```
