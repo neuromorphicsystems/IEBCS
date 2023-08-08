@@ -4,7 +4,7 @@ ICNS Event Based Camera Simulator
 NEW: Available in Matlab.
 
 This repository presents the simulator used at ICNS to assess EBC. It contains:
-* /cpp/: C++11 implementation of the pixel simulation model and the interface Python/C++. 
+*  /cpp/: C++11 implementation of the pixel simulation model and the interface Python/C++. 
 * /matlab/: interface Matlab/C++
 * /data/: Stores distributions used to sample the noise of the sensor and other resources. 
 * /examples/: Several different ways of using the simulator (see bellow)'*
@@ -15,13 +15,14 @@ This Figure summarizes the differences with others tools, such as
 
 ![alt text](data/img/schema_framework.png)
 
-## -- Requirements and Install -- 
+## -- Requirements -- 
 
-Tested on Ubuntu 18.04, Python > 3.7. 
+Tested on Ubuntu 18.04, 20.04 and 22.04 with Python 3.8. 
 
-To use the Python interface, create a virtual environment using conda:
+Create a virtual environment using conda and make sure that the gxx is up to date with Anaconda:
 ```
-conda env create -f simuDVSICNS.yml 
+conda install gxx_linux-64
+conda env create -f simuDVSICNS_Ubuntu{18 or 20_22}.yml 
 conda activate testSimu
 ```
 To use the C++ interface, run compile_test.sh to install and test the Python/C++ interface.
