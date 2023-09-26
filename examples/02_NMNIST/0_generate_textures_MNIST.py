@@ -13,10 +13,19 @@ sys.path.append(cur_dir + "/../../src")
 
 type = "NMNIST_test"
 
-path_text = "../../data/text/"
-if not os.path.exists(path_text):
-    os.mkdir(path_text)
 
+path_NMNIST = "../../data/"
+
+if not os.path.exists(path_NMNIST + "tmp"):
+    os.mkdir(path_NMNIST + "tmp")
+if not os.path.exists(path_NMNIST + "tmp/text"):
+    os.mkdir(path_NMNIST + "tmp/text")
+if not os.path.exists(path_NMNIST + "tmp/labels"):
+    os.mkdir(path_NMNIST + "tmp/labels")
+if not os.path.exists(path_NMNIST + "tmp/events"):
+    os.mkdir(path_NMNIST + "tmp/events")
+
+path_text = path_NMNIST + "tmp/text/"
 if os.path.exists(path_text + "NMNIST_lab.npy"):
     print("Textures already generated, please make sure everything is archived")
 else:
@@ -38,6 +47,6 @@ else:
             img_mnist = img_mnist + 100
             img_mnist[img_mnist > 255] = 255
             img_texture[img_texture.shape[0]//2-14:img_texture.shape[0]//2+14, i*28:(i+1)*28] = img_mnist[::-1, :]
-        cv2.imwrite(path_text + 'img_temp_{}.png'.format(t), img_texture)
+        cv2.imwrite(path_text + 'mnist_plane_texture.png'.format(t), img_texture)
 
     np.save(path_text + "NMNIST_lab.npy", labels)

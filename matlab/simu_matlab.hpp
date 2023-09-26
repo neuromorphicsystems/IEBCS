@@ -4,7 +4,7 @@
  *  Created on: 12 Feb 2021
  *      Author: joubertd
  */
-#include "../cpp/simu.hpp"
+#include "../cpp/simu.h"
 #ifndef SIMU_MATLAB_HPP_
 #define SIMU_MATLAB_HPP_
 class SimuICNSMatlab{

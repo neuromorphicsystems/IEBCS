@@ -132,8 +132,8 @@ class DvsSensor:
         self.bgn_neg_next = np.zeros((self.shape[0], self.shape[1]), dtype=np.uint64)
 
         # Pick two spectrums for each pixel
-        id_n = np.random.uniform(0, noise_neg.shape[0], size=(self.shape[0] * self.shape[1])).astype(np.int)
-        id_p = np.random.uniform(0, noise_pos.shape[0], size=(self.shape[0] * self.shape[1])).astype(np.int)
+        id_n = np.random.uniform(0, noise_neg.shape[0], size=(self.shape[0] * self.shape[1])).astype(int)
+        id_p = np.random.uniform(0, noise_pos.shape[0], size=(self.shape[0] * self.shape[1])).astype(int)
         self.bgn_hist_pos = noise_pos[id_p, :]
         self.bgn_hist_neg = noise_neg[id_n, :]
         # Normalize spectrums
@@ -360,7 +360,7 @@ class DvsSensor:
         ind_ref = np.where(self.cur_ref < self.time + dt)
         if len(ind_ref[0]) > 0:
             self.last_v[ind_ref] = self.cur_v[ind_ref] + (img_d[ind_ref] - self.cur_v[ind_ref]) * \
-                                (1 - np.exp(-(np.array(self.cur_ref[ind_ref] - self.time, dtype=np.float)) / self.tau_p[ind_ref]))
+                                (1 - np.exp(-(np.array(self.cur_ref[ind_ref] - self.time, dtype=float)) / self.tau_p[ind_ref]))
             self.time_px[ind_ref] = self.cur_ref[ind_ref]
             self.cur_ref[ind_ref] = -1
             self.cur_v[ind_ref] = self.last_v[ind_ref]
@@ -375,7 +375,7 @@ class DvsSensor:
             pk_noise = self.check_noise_hist(dt, img_d)
         # Check contrast
         target = np.zeros(img_d.shape)
-        target[ind] = self.cur_v[ind] + (img_d[ind] - self.cur_v[ind]) * (1 - np.exp(-np.array(self.time + dt - self.time_px[ind], dtype=np.float) / self.tau_p[ind]))  # Flux at the end of t + dt
+        target[ind] = self.cur_v[ind] + (img_d[ind] - self.cur_v[ind]) * (1 - np.exp(-np.array(self.time + dt - self.time_px[ind], dtype=float) / self.tau_p[ind]))  # Flux at the end of t + dt
         dif = target - self.last_v
         ind_pos = np.where((dif > self.cur_th_pos) & (self.cur_ref == np.uint64(-1)))
         ind_neg = np.where((dif < self.cur_th_neg) & (self.cur_ref == np.uint64(-1)))
@@ -399,7 +399,7 @@ class DvsSensor:
             ind_ref = np.where(self.cur_ref < self.time + dt)
             if len(ind_ref[0]) > 0:
                 self.last_v[ind_ref] = self.cur_v[ind_ref] + (img_d[ind_ref] - self.cur_v[ind_ref]) * \
-                                       (1 - np.exp(-(np.array(self.cur_ref[ind_ref]-self.time_px[ind_ref], dtype=np.float)) / self.tau_p[ind_ref]))
+                                       (1 - np.exp(-(np.array(self.cur_ref[ind_ref]-self.time_px[ind_ref], dtype=float)) / self.tau_p[ind_ref]))
                 self.time_px[ind_ref] = self.cur_ref[ind_ref]
                 self.cur_ref[ind_ref] = -1
                 self.cur_v[ind_ref] = self.last_v[ind_ref]
@@ -409,11 +409,11 @@ class DvsSensor:
                     self.list_v_rst.append(np.array(self.last_v))
             dif = np.zeros((self.shape[0], self.shape[1]))
             target[ind_ref] = self.cur_v[ind_ref] + (img_d[ind_ref] - self.cur_v[ind_ref]) * (
-                        1 - np.exp(-np.array(self.time + dt - self.time_px[ind_ref], dtype=np.float) / self.tau_p[ind_ref]))
+                        1 - np.exp(-np.array(self.time + dt - self.time_px[ind_ref], dtype=float) / self.tau_p[ind_ref]))
             dif[ind_ref] = target[ind_ref] - self.last_v[ind_ref]
             ind_pos = np.where(dif > self.cur_th_pos)
             ind_neg = np.where(dif < self.cur_th_neg)
-        self.cur_v[ind] = self.cur_v[ind] + (img_d[ind] - self.cur_v[ind]) * (1 - np.exp(-np.array(self.time + dt - self.time_px[ind], dtype=np.float) / self.tau_p[ind]))
+        self.cur_v[ind] = self.cur_v[ind] + (img_d[ind] - self.cur_v[ind]) * (1 - np.exp(-np.array(self.time + dt - self.time_px[ind], dtype=float) / self.tau_p[ind]))
         # Update Time
         self.time += dt
         self.time_px[:] = self.time

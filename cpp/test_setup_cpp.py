@@ -1,11 +1,6 @@
-import numpy as np
-import dsi
-import time
-import cv2
 import sys
 sys.path.append("../src")
 from dvs_sensor import *
-import matplotlib.pyplot as plt
 
 dsi.initSimu(200, 200)
 dsi.initLatency(100.0, 30.0, 100.0, 1000.0)
