@@ -1,15 +1,8 @@
-//============================================================================
-// Name        : simu_cpp.cpp
-// Author      : Damien J
-// Version     :
-// Copyright   : Your copyright notice
-// Description : Hello World in C, Ansi-style
-//============================================================================
-
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
+
 #include <Python.h>
 #include <numpy/arrayobject.h>
-#include "simu.hpp" 
+#include "simu.h"
 
 std::unique_ptr<SimuICNS> mySimu;
 
@@ -112,7 +105,8 @@ static PyObject * updateImg(PyObject *self, PyObject *args){
     auto img_shape = PyArray_SHAPE(reinterpret_cast<PyArrayObject *>(img_array));
     if(img_shape[1] != mySimu->getYShape() || img_shape[0] != mySimu->getXShape()){
         std::unique_ptr<char[]> buf( new char[ 100 ] );
-        sprintf(buf.get(), "The Dimension of the image must be %d x %d and time is a one value array\n", mySimu->getYShape(), mySimu->getXShape());
+        const char *const fmt_str = "The Dimension of the image must be %d x %d and time is a one value array\n";
+        snprintf(buf.get(), strlen(fmt_str), fmt_str, mySimu->getYShape(), mySimu->getXShape());
         PyErr_SetString(PyExc_ValueError, buf.get());
         return NULL;
     }

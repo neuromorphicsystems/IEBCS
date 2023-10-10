@@ -19,10 +19,10 @@ class Blender_DvsSensor(DvsSensor):
     focal = 8.0  # mm
     def_x = 640  # pixel
     def_y = 640  # pixel
-    position = np.array([0.0, 0.0, 0.0], np.float)  # Position of the sensor in the Blender's convention (Blender Unit)
-    angle = np.array([0.0, 0.0, 0.0], np.float)  # Angle of the sensor (Euler) (Blender Unit)
-    speed = np.array([0.0, 0.0, 0.0], np.float)  # Speed of the position (Blender Unit / s)
-    angular_speed = np.array([0.0, 0.0, 0.0], np.float)  # Angular Speed (Blender Unit / s)
+    position = np.array([0.0, 0.0, 0.0], float)  # Position of the sensor in the Blender's convention (Blender Unit)
+    angle = np.array([0.0, 0.0, 0.0], float)  # Angle of the sensor (Euler) (Blender Unit)
+    speed = np.array([0.0, 0.0, 0.0], float)  # Speed of the position (Blender Unit / s)
+    angular_speed = np.array([0.0, 0.0, 0.0], float)  # Angular Speed (Blender Unit / s)
 
     def __init__(self, name):
         """ Create a new Blender camera
