@@ -92,8 +92,8 @@ ppsee = Blender_DvsSensor("PropheseeSensor")
 ppsee.set_shape(28, 28)
 ppsee.set_sensor(28, 28, 0.015)
 ppsee.set_dvs_sensor(th_pos=0.15, th_neg=0.15, th_n=0.05, lat=100, tau=300, jit=30, bgn=0.1)
-ppsee.init_tension()
-ppsee.init_bgn_hist("../../data/noise_pos_0.1lux.npy", "../../data/noise_neg_0.1lux.npy")
+ppsee.init_thresholds()
+ppsee.init_bgn_hist("./data/noise_pos_0.1lux.npy", "./data/noise_neg_0.1lux.npy")
 ppsee.set_sensor_optics(20)
 scene = bpy.context.scene
 master_collection = bpy.context.collection
@@ -102,7 +102,7 @@ master_collection.objects.link(ppsee.cam)
 scene.camera = ppsee.cam
 ppsee.set_angle([math.pi, 0, 0.0])
 ppsee.set_position([0.0, 0.0, 0.0])
-ppsee.init_tension()
+ppsee.init_thresholds()
 
 scene.render.image_settings.file_format = 'PNG'
 scene.render.filepath = path_NMNIST + 'tmp/tmp_{}_{}/image_anim'.format(text_start, text_end)

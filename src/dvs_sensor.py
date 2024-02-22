@@ -3,7 +3,6 @@ import numpy as np
 import cv2
 from event_buffer import EventBuffer
 from tqdm import tqdm
-import dsi
 
 # Global variables
 # Log bin for the noise distributions
@@ -33,8 +32,8 @@ class DvsSensor:
     ref = 50  # Refractory period (us)
     time = 0  # Time of the internal counter (us)
     noise_model = NOISE_FREQ # Model of noise used
-    last_v = np.zeros(shape, dtype=np.double)  # Tension of each pixel during the last reset
-    cur_v = np.zeros(shape, dtype=np.double)   # Tension of each pixel at the time t
+    last_v = np.zeros(shape, dtype=np.double)  # Voltage of each pixel during the last reset
+    cur_v = np.zeros(shape, dtype=np.double)   # Voltage of each pixel at the time t
     cur_th_pos = np.zeros(shape, dtype=np.double)  # Current Positive Threshold
     cur_th_neg = np.zeros(shape, dtype=np.double)   # Current Negative Threshold
     cur_ref = np.zeros(shape, dtype=np.uint64)  # Time when the pixel will have to be reset
@@ -94,7 +93,7 @@ class DvsSensor:
         self.tau_p = np.zeros(self.shape, dtype=np.double)
         self.cur_ref[:] = -1
         self.init_bgn()
-        self.init_tension()
+        self.init_thresholds()
         self.time = 0
 
     def init_bgn(self):
@@ -125,6 +124,7 @@ class DvsSensor:
         if len(noise_neg) == 0:
             print(filename_noise_neg, " is not correct")
             return
+        
         # Load histogram and Update next noise event
         self.bgn_hist_pos = np.zeros((self.shape[0] * self.shape[1], 72), dtype=float)
         self.bgn_hist_neg = np.zeros((self.shape[0] * self.shape[1], 72), dtype=float)
@@ -136,6 +136,7 @@ class DvsSensor:
         id_p = np.random.uniform(0, noise_pos.shape[0], size=(self.shape[0] * self.shape[1])).astype(int)
         self.bgn_hist_pos = noise_pos[id_p, :]
         self.bgn_hist_neg = noise_neg[id_n, :]
+
         # Normalize spectrums
         s_p = np.sum(self.bgn_hist_pos, axis=1)
         s_n = np.sum(self.bgn_hist_neg, axis=1)
@@ -154,12 +155,12 @@ class DvsSensor:
                                                self.bgn_hist_neg.shape[1],
                                                axis=2)
 
-        for x in tqdm(range(0, self.shape[1], 1), desc="Noise Init"):
-            for y in range(0, self.shape[0], 1):
-                self.bgn_pos_next[y, x] = np.uint64(self.get_next_noise(x, y, 1) * np.random.uniform(0, 1))
-                self.bgn_neg_next[y, x] = np.uint64(self.get_next_noise(x, y, 0) * np.random.uniform(0, 1))
+        for x in tqdm(range(0, self.shape[0], 1), desc="Noise Init"):
+            for y in range(0, self.shape[1], 1):
+                self.bgn_pos_next[x, y] = np.uint64(self.get_next_noise(x, y, 1) * np.random.uniform(0, 1))
+                self.bgn_neg_next[x, y] = np.uint64(self.get_next_noise(x, y, 0) * np.random.uniform(0, 1))
 
-    def init_tension(self):
+    def init_thresholds(self):
         """ Initialize the thresholds of the comparators
             The positive and negative threshold share the same noise, which can be changed if necessary
         """
@@ -276,7 +277,7 @@ class DvsSensor:
         """ Updates the next noise event
             Take a value between 0 and 1 and find the delay of the next noise event
             Args:
-                x, y: coordonnate of the pixel
+                x, y: coordinate of the pixel
                 pol: polarity of the noise
             Returns:
                 the delay of the next noise event in us
@@ -331,7 +332,7 @@ class DvsSensor:
             Args:
                 img: radiometric value in the focal plane
                 dt: delay between the frame and the last one (us)
-                debug: return he intermediary values of the tension before the comparators
+                debug: return he intermediary values of the voltage before the comparators
             Returns:
                 EventBuffer of the created events
              """
@@ -482,29 +483,3 @@ class DvsSensor:
         return ev
 
 
-def init_bgn_hist_cpp(filename_noise_pos, filename_noise_neg):
-    """ Load the distribution of the noise for the cpp simulator
-        Pick randomly one noise distribution for each pixel and initialize also randomly the phases of the
-        background noise
-        Args:
-            filename_noise_pos: path of the positive noise's filename
-            filename_noise_neg: path of the negative noise's filename
-        """
-    noise_pos = np.load(filename_noise_pos)
-    if len(noise_pos) == 0: raise NameError(filename_noise_pos + " is not correct")
-    noise_pos = np.reshape(noise_pos, (noise_pos.shape[0] * noise_pos.shape[1], noise_pos.shape[2]))
-    ind_n = np.where(noise_pos[:, -2] == 0)
-    noise_pos[ind_n, 1] = 1
-    noise_pos[ind_n, -2] = 1
-    div = np.tile(noise_pos[:, -2], [noise_pos.shape[1], 1])
-    noise_pos = noise_pos / div.transpose()
-
-    noise_neg = np.load(filename_noise_neg)
-    if len(noise_neg) == 0: raise NameError(filename_noise_neg + " is not correct")
-    noise_neg = np.reshape(noise_neg, (noise_neg.shape[0] * noise_neg.shape[1], noise_neg.shape[2]))
-    ind_n = np.where(noise_neg[:, -2] == 0)
-    noise_neg[ind_n, 1] = 1
-    noise_neg[ind_n, -2] = 1
-    div = np.tile(noise_neg[:, -2], [noise_neg.shape[1], 1])
-    noise_neg = noise_neg / div.transpose()
-    dsi.initNoise(noise_pos, noise_neg)

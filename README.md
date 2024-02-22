@@ -3,13 +3,13 @@ ICNS Event Based Camera Simulator
 
 Available in Matlab and Python.
 
-This repository presents the simulator used at ICNS to assess EBC. It contains:
+This repository presents the simulator used at ICNS to assess EBCs. It contains:
 * /cpp/: C++ implementation of the pixel simulation model and the interface Python/C++. 
 * /matlab/: interface Matlab/C++
 * /data/: Stores distributions used to sample the noise of the sensor and other resources. 
 * /examples/: Several different ways of using the simulator (see below)'*
 
-This Figure summarizes the differences with others tools, such as 
+This Figure summarizes the differences with other simulators, namely: 
 [ESIM](https://github.com/uzh-rpg/rpg_esim) and 
  [V2E](https://github.com/SensorsINI/v2e):
 
@@ -18,6 +18,7 @@ This Figure summarizes the differences with others tools, such as
 ## -- Requirements -- 
 
 Tested on MacOS with Python 3.10, but there is no reason it should not work on Linux or Windows.
+Example 2 uses Blender, for which the current version only works with Python 3.10.
 
 Create a virtual environment using conda:
 ```
@@ -50,21 +51,23 @@ pip install python-mnist
 
 ### 00: Video -> events
 
-Simulate events from a video. To initialize the C++ sensor:
+Simulate events from a video. To initialise the C++ sensor:
 ```
 dsi.initSimu(cap.get(cv2.CAP_PROP_FRAME_HEIGHT), cap.get(cv2.CAP_PROP_FRAME_WIDTH))
 dsi.initLatency(200, 50, 50, 300)
 dsi.initContrast(0.3, 0.3, 0.05)
-init_bgn_hist_cpp("../../data/noise_pos_161lux.npy", "../../data/noise_pos_161lux.npy")
+init_bgn_hist_cpp("../../data/noise_pos_161lux.npy", "../../data/noise_neg_161lux.npy")
 ```
-The first line initialize the definition of the sensor, then:  
+The first line initialises the definition of the sensor at the resolution of the video.
+The second line defines:  
 * latency = 200 μs   
 * jitter = 50 μs  
 * refractory period = 50 μs  
 * time constant log front-end = 300 μs
+The third line defines:
 * positive/negative log threshold = 0.3  
 * threshold mismatch = 0.05  
-* The noise is sampled from 2 distributions acquired with a real sensor under 161lux.
+Finally the noise is defined to be sampled from 2 distributions acquired with a real sensor under 161lux.
 <img src="data/img/aps_00.gif" alt="drawing" width="300"/>
 <img src="data/img/ev_00.gif" alt="drawing" width="300"/>
 
