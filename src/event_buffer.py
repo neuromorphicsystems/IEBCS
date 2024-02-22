@@ -21,7 +21,7 @@ class EventBuffer():
         self.y = np.zeros(size, dtype=np.uint16)
         self.p = np.zeros(size, dtype=np.uint8)
         self.ts = np.zeros(size, dtype=np.uint64)
-        self.i = size
+        self.i = 0
 
     def get_x(self):
         return self.x[:self.i]
@@ -40,24 +40,19 @@ class EventBuffer():
             Args:
                 nsize: number of free space elements to add
         """
-        # prev_shape = self.x.shape[0]
-        # x = np.zeros(prev_shape + nsize, dtype=np.uint16)
-        # y = np.zeros(prev_shape + nsize, dtype=np.uint16)
-        # p = np.zeros(prev_shape + nsize, dtype=np.uint8)
-        # ts = np.zeros(prev_shape + nsize, dtype=np.uint64)
-        # x[:prev_shape] = self.x
-        # y[:prev_shape] = self.y
-        # p[:prev_shape] = self.p
-        # ts[:prev_shape] = self.ts
-        # self.x = x
-        # self.y = y
-        # self.p = p
-        # self.ts = ts
-        size = self.x.size + nsize
-        self.x.resize(size)
-        self.y.resize(size)
-        self.p.resize(size)
-        self.ts.resize(size)
+        prev_shape = self.x.shape[0]
+        x = np.zeros(prev_shape + nsize, dtype=np.uint16)
+        y = np.zeros(prev_shape + nsize, dtype=np.uint16)
+        p = np.zeros(prev_shape + nsize, dtype=np.uint8)
+        ts = np.zeros(prev_shape + nsize, dtype=np.uint64)
+        x[:prev_shape] = self.x
+        y[:prev_shape] = self.y
+        p[:prev_shape] = self.p
+        ts[:prev_shape] = self.ts
+        self.x = x
+        self.y = y
+        self.p = p
+        self.ts = ts
 
     def remove_time(self, t_min, t_max):
         """
@@ -118,10 +113,23 @@ class EventBuffer():
             """
         if len(self.x) > 0 and not ev is None:
             if self.i + ev.x.shape[0] > self.x.shape[0] - 1:
-                np.append(self.x, ev.x)
-                np.append(self.y, ev.y)
-                np.append(self.p, ev.p)
-                np.append(self.ts, ev.ts)
+                prev_shape = self.x.shape[0]
+                x = np.zeros(prev_shape + ev.ts.shape[0], dtype=np.uint16)
+                y = np.zeros(prev_shape + ev.ts.shape[0], dtype=np.uint16)
+                p = np.zeros(prev_shape + ev.ts.shape[0], dtype=np.uint8)
+                ts = np.zeros(prev_shape + ev.ts.shape[0], dtype=np.uint64)
+                x[:self.i] = self.x[:self.i]
+                y[:self.i] = self.y[:self.i]
+                p[:self.i] = self.p[:self.i]
+                ts[:self.i] = self.ts[:self.i]
+                x[self.i:self.i + ev.x.shape[0]] = ev.x
+                y[self.i:self.i + ev.x.shape[0]] = ev.y
+                p[self.i:self.i + ev.x.shape[0]] = ev.p
+                ts[self.i:self.i + ev.x.shape[0]] = ev.ts
+                self.x = x
+                self.y = y
+                self.p = p
+                self.ts = ts
             else:
                 self.x[self.i:self.i + ev.i] = ev.x[:ev.i]
                 self.y[self.i:self.i + ev.i] = ev.y[:ev.i]

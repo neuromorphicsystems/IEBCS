@@ -424,7 +424,8 @@ class DvsSensor:
             self.list_v_rst.append(np.array(self.last_v))
         pk_end = EventBuffer(0)
         pk_end.merge(pk, pk_noise)
-        if debug: print('{} Noise event, {} signal events'.format(pk_noise.i, pk.i))
+        if debug: 
+            print('{} Noise event, {} signal events'.format(pk_noise.i, pk.i))
         return pk_end
 
     def update_esim(self, im, time, log_eps=-1):

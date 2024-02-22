@@ -25,9 +25,9 @@ def load_dat_event(filename, start=0, stop=-1, display=False):
         if display: print(l)
         l = f.readline()
         all_lines = all_lines + l
-    f.close()
+    # f.close()
     all_lines = str(all_lines)
-    f = open(filename, 'rb')
+    # f = open(filename, 'rb')
     f.seek(p, 0)
     evType = np.uint8(f.read(1)[0])
     evSize = np.uint8(f.read(1)[0])
@@ -100,10 +100,10 @@ def write_event_dat(filename, ts, x, y, pol,
     """
     f = open(filename, 'wb')
     if f == -1:
-        print("Impossible to open the file")
+        print("Cannot open the file")
         return
     if event_type in ['dvs', 'cd', 'td']:
-        f.write(bytes("% Data file containing CD events.\n", encoding='utf8'))
+        f.write(bytes("% Data file containing DVS events.\n", encoding='utf8'))
     elif event_type in ['aps', 'em']:
         f.write(bytes("% Data file containing EM events.\n", encoding='utf8'))
     else:
@@ -137,3 +137,6 @@ def write_event_dat(filename, ts, x, y, pol,
     arr[1::2] += pol_mask & buf
     arr.tofile(f)
     f.close()
+
+ts, x, y, pol =  load_dat_event("ev_100_10_100_300_0.3_0.01.dat", start=0, stop=-1, display=True)
+print(ts.shape)
