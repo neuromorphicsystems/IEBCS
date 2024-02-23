@@ -13,6 +13,7 @@ sys.path.append("./src")
 from event_buffer import EventBuffer
 from dvs_sensor import DvsSensor
 from event_display import EventDisplay
+from arbiter import SynchronousArbiter
 from tqdm import tqdm
 
 filename = "./data/video/See Hummingbirds Fly Shake Drink in Amazing Slow Motion  National Geographic.mp4"
@@ -51,6 +52,9 @@ dvs.init_image(im)
 # Create the event buffer
 ev_full = EventBuffer(1)
 
+# Create the arbiter
+ea = SynchronousArbiter(dvs.shape[1], 0.001, time)
+
 # Create the display
 render_timesurface = 1
 ed = EventDisplay("Events", 
@@ -71,6 +75,8 @@ if cap.isOpened():
         im = cv2.cvtColor(im, cv2.COLOR_RGB2LUV)[:, :, 0] / 255.0 * 1e4
         # Calculate the events
         ev = dvs.update(im, dt)
+        # Simulate the arbiter
+        ea.process(ev, dt)
         # Display the events
         ed.update(ev, dt)
         # Add the events to the buffer for the full video

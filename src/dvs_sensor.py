@@ -18,7 +18,7 @@ NOISE_MEASURE = 2  # Pixels have a noise distribution measured in one lighting c
 
 class DvsSensor:
     """ Class to initialise and simulate the DVS sensor """
-    # shape = (50, 50)                                    # (y, x)
+    # shape = (50, 50)                                    # Size of the imager
     # m_th_pos = 0.2                                      # Mean positive sensitivity (%)
     # m_th_neg = -0.2                                     # Mean negative sensitivity (%)
     # m_th_noise = 0.02                                   # Mean reset noise standard deviation of the transistor (%)
