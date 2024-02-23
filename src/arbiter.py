@@ -4,9 +4,9 @@ from event_buffer import EventBuffer
 
 class BottleNeckArbiter():
     """Simple bottleneck arbiter - doesn't match anything in the real world"""
-    t_per_event = 0.1        # Time spent to process one event (us)
-    ev_acc = EventBuffer(0)  # Events accumulated
-    time = 0                 # Current time (us)
+    # t_per_event = 0.1        # Time spent to process one event (us)
+    # ev_acc = EventBuffer(0)  # Events accumulated
+    # time = 0                 # Current time (us)
 
     def __init__(self, t_per_event, time):
         """ Initialise the arbiter
@@ -16,6 +16,7 @@ class BottleNeckArbiter():
         """
         self.t_per_event = t_per_event
         self.time = time
+        self.ev_acc = EventBuffer(0)
 
     def process(self, new_ev, dt):
         """
@@ -45,9 +46,9 @@ class BottleNeckArbiter():
 
 class RowArbiter():
     """The row arbiter is a simple arbiter, processing events row by row."""
-    t_per_event = 0.1        # Time spent to process one event (us)
-    ev_acc = EventBuffer(0)  # Events accumulated
-    time = 0                 # Current time (us)
+    # t_per_event = 0.1        # Time spent to process one event (us)
+    # ev_acc = EventBuffer(0)  # Events accumulated
+    # time = 0                 # Current time (us)
     def __init__(self, t_per_event, time):
         """ Initialise the arbiter
         Args:
@@ -56,6 +57,7 @@ class RowArbiter():
         """
         self.t_per_event = t_per_event
         self.time = time
+        self.ev_acc = EventBuffer(0)
 
     def process(self, new_ev, dt):
         """
@@ -85,13 +87,13 @@ class RowArbiter():
 
 class SynchronousArbiter():
     """Synchronous row arbiter - based on DAVIS346 arbiter"""
-    clock_period = 0.001     # Clock's period (us)
-    ev_acc = EventBuffer(0)  # Events accumulated
-    time = 0                 # Current time (us)
-    cur_row = 0              # current row processed
-    max_row= 200             # Number of rows
+    # clock_period = 0.001     # Clock's period (us)
+    # ev_acc = EventBuffer(0)  # Events accumulated
+    # time = 0                 # Current time (us)
+    # cur_row = 0              # current row processed
+    # max_row= 200             # Number of rows in sensor
 
-    def __init__(self, max_row, clock_period, time):
+    def __init__(self, clock_period, time, max_row):
         """ Initialise the arbiter
         Args:
            max_row: number of rows
@@ -102,6 +104,7 @@ class SynchronousArbiter():
         self.time = time
         self.cur_row = 0
         self.max_row = max_row
+        self.ev_acc = EventBuffer(0)
 
     def process(self, new_ev, dt):
         """
@@ -109,11 +112,11 @@ class SynchronousArbiter():
             new_event: incomming events as EventBuffer
             dt: time since the last update (us)
         """
-        nb_row_processed = int(dt // self.clock_period)
+        rows_to_process = int(dt // self.clock_period)
         t_max = self.time + dt
         release_ev = EventBuffer(0)
         self.ev_acc.increase_ev(new_ev)
-        for i in range(0, nb_row_processed, 1):
+        for i in range(0, rows_to_process, 1):
             self.time = self.time + self.clock_period
             self.cur_row = (self.cur_row + 1) % self.max_row
             ind = np.where(

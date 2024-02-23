@@ -13,7 +13,7 @@ sys.path.append("./src")
 from event_buffer import EventBuffer
 from dvs_sensor import DvsSensor
 from event_display import EventDisplay
-from arbiter import SynchronousArbiter
+from arbiter import SynchronousArbiter, BottleNeckArbiter, RowArbiter
 from tqdm import tqdm
 
 filename = "./data/video/See Hummingbirds Fly Shake Drink in Amazing Slow Motion  National Geographic.mp4"
@@ -53,7 +53,9 @@ dvs.init_image(im)
 ev_full = EventBuffer(1)
 
 # Create the arbiter
-ea = SynchronousArbiter(dvs.shape[1], 0.001, time)
+# ea = BottleNeckArbiter(0.001, time)
+# ea = RowArbiter(0.001, time)
+ea = SynchronousArbiter(0.1, time, dvs.shape[1])
 
 # Create the display
 render_timesurface = 1
