@@ -138,5 +138,6 @@ def write_event_dat(filename, ts, x, y, pol,
     arr.tofile(f)
     f.close()
 
-ts, x, y, pol =  load_dat_event("ev_100_10_100_300_0.3_0.01.dat", start=0, stop=-1, display=True)
-print(ts.shape)
+if __name__ == '__main__':
+    ts, x, y, pol =  load_dat_event("ev_100_10_100_300_0.3_0.01.dat", start=0, stop=-1, display=True)
+    print(ts.shape)

@@ -11,42 +11,44 @@ for dec in range(-3, 5, 1):
     bins.append(np.arange(10 ** dec, 10 ** (dec + 1), 10 ** dec))
 bins = np.array(bins)
 FREQ = bins.reshape(bins.shape[0] * bins.shape[1])
+
 # Noise generation methods
 NOISE_FREQ = 1     # Pixels have the same +/- noise frequency but with different phases
 NOISE_MEASURE = 2  # Pixels have a noise distribution measured in one lighting conditions
 
 
 class DvsSensor:
-    """ This structure add the parameters needed to simulate the DVS sensor """
-    shape = (50, 50)  # (y, x)
-    m_th_pos = 0.2  # Mean positive sensitivity (%)
-    m_th_neg = -0.2  # Mean negative sensitivity (%)
-    m_th_noise = 0.02  # Mean reset noise standard deviation of the transistor (%)
-    m_latency = 100  # Mean Latency (us)
-    tau = 100  # Time constant (us) of the logarithmic part
-    m_jitter = 30  # Mean jitter (us)
-    m_bgn_pos = 0.1  # Mean positive background frequency (Hz)
-    m_bgn_pos_per = np.uint64(1e6 / m_bgn_pos)  # Mean positive background period (us)
-    m_bgn_neg = 0.01  # Mean negative background frequency (Hz)
-    m_bgn_neg_per = np.uint64(1e6 / m_bgn_neg)  # Mean negative background period (us)
-    ref = 50  # Refractory period (us)
-    time = 0  # Time of the internal counter (us)
-    noise_model = NOISE_FREQ # Model of noise used
-    last_v = np.zeros(shape, dtype=np.double)  # Voltage of each pixel during the last reset
-    cur_v = np.zeros(shape, dtype=np.double)   # Voltage of each pixel at the time t
-    cur_th_pos = np.zeros(shape, dtype=np.double)  # Current Positive Threshold
-    cur_th_neg = np.zeros(shape, dtype=np.double)   # Current Negative Threshold
-    cur_ref = np.zeros(shape, dtype=np.uint64)  # Time when the pixel will have to be reset
-    bgn_pos_next = np.zeros(shape, dtype=np.uint64)  # Next expected positive noise event
-    bgn_neg_next = np.zeros(shape, dtype=np.uint64)   # Next expected negative noise event
-    bgn_hist_pos = np.zeros((1, 1, 45), dtype=float)  # Positive noise cumulative distributions
-    bgn_hist_neg = np.zeros((1, 1, 45), dtype=float)  # Negative noise cumulative distributions
-    time_px = np.zeros(shape, dtype=np.uint64)  # Time t at the pixel (us)
-    tau_p = np.zeros(shape, dtype=np.double)  # Time constant of each pixel (us)
-    # Debug
-    list_ts = []  # List of the timestamps used between two frames
-    list_v = []  # List of the v values between two frames
-    list_v_rst = []  # List of the reset v values between two frames
+    """ Class to initialise and simulate the DVS sensor """
+    shape = (50, 50)                                    # (y, x)
+    m_th_pos = 0.2                                      # Mean positive sensitivity (%)
+    m_th_neg = -0.2                                     # Mean negative sensitivity (%)
+    m_th_noise = 0.02                                   # Mean reset noise standard deviation of the transistor (%)
+    m_latency = 100                                     # Mean Latency (us)
+    tau = 100                                           # Time constant (us) of the logarithmic part
+    m_jitter = 30                                       # Mean jitter (us)
+    m_bgn_pos = 0.1                                     # Mean positive background frequency (Hz)
+    m_bgn_neg = 0.01                                    # Mean negative background frequency (Hz)
+    m_bgn_pos_per = np.uint64(1e6 / m_bgn_pos)          # Mean positive background period (us)
+    m_bgn_neg_per = np.uint64(1e6 / m_bgn_neg)          # Mean negative background period (us)
+    ref = 50                                            # Refractory period (us)
+    time = 0                                            # Time of the internal counter (us)
+    noise_model = NOISE_FREQ                            # Model of noise used
+    last_v       = np.zeros(shape, dtype=np.double)     # Voltage of each pixel during the last reset
+    cur_v        = np.zeros(shape, dtype=np.double)     # Voltage of each pixel at the time t
+    cur_th_pos   = np.zeros(shape, dtype=np.double)     # Current Positive Threshold
+    cur_th_neg   = np.zeros(shape, dtype=np.double)     # Current Negative Threshold
+    cur_ref      = np.zeros(shape, dtype=np.uint64)     # Time when the pixel will have to be reset
+    bgn_pos_next = np.zeros(shape, dtype=np.uint64)     # Next expected positive noise event
+    bgn_neg_next = np.zeros(shape, dtype=np.uint64)     # Next expected negative noise event
+    bgn_hist_pos = np.zeros((1, 1, 45), dtype=float)    # Positive noise cumulative distributions
+    bgn_hist_neg = np.zeros((1, 1, 45), dtype=float)    # Negative noise cumulative distributions
+    time_px      = np.zeros(shape, dtype=np.uint64)     # Time t at the pixel (us)
+    tau_p        = np.zeros(shape, dtype=np.double)     # Time constant of each pixel (us)
+
+    # Debug use only
+    list_ts = []    # List of the timestamps used between two frames
+    list_v = []     # List of the v values between two frames
+    list_v_rst = [] # List of the reset v values between two frames
 
     def __init__(self, name):
         """ Init the sensor by creating the Blender Camera
@@ -62,7 +64,7 @@ class DvsSensor:
         """
         self.shape = (x, y)
 
-    def set_dvs_sensor(self, th_pos, th_neg, th_n, lat, tau, jit, bgn):
+    def set_dvs_sensor(self, th_pos, th_neg, th_n, lat, tau, jit, bgnp, bgnn, ref):
         """ Set the properties of the DVS sensor
 
             In this version the sensor positive and negative event's properties are symmetrical
@@ -81,10 +83,11 @@ class DvsSensor:
         self.m_latency = lat
         self.tau = tau
         self.m_jitter = jit
-        self.m_bgn_pos = bgn
-        self.m_bgn_pos_per = np.uint64(1e6 / bgn)
-        self.m_bgn_neg_per = np.uint64(1e6 / bgn)
-        self.m_bgn_neg = bgn
+        self.m_bgn_pos = bgnp
+        self.m_bgn_neg = bgnn
+        self.m_bgn_pos_per = np.uint64(1e6 / bgnp)
+        self.m_bgn_neg_per = np.uint64(1e6 / bgnn)
+        self.ref = ref
         self.shape = (self.shape[1], self.shape[0])
         self.last_v = np.zeros(self.shape, dtype=np.double)
         self.cur_v = np.zeros(self.shape, dtype=np.double)
@@ -97,17 +100,17 @@ class DvsSensor:
         self.time = 0
 
     def init_bgn(self):
-        """ Initialize the phases of the background noise
-            This noise model does not include noise differences between pixel: every pixel will fire noise event a the
-             same frequency but with a random phase
+        """ Initialise the phases of the background noise
+            This noise model does not include noise differences between pixel: every pixel will fire noise events a the 
+            same frequency but with a random phase
         """
         self.noise_model = NOISE_FREQ
         self.bgn_pos_next = np.array(np.random.randint(0, self.m_bgn_pos_per, self.shape), dtype=np.uint64)
         self.bgn_neg_next = np.array(np.random.randint(0, self.m_bgn_neg_per, self.shape), dtype=np.uint64)
 
     def init_bgn_hist(self, filename_noise_pos, filename_noise_neg):
-        """ Load the distribution of the noise,
-            Pick randomly one noise distribution for each pixel and initialize also randomly the phases of the
+        """ Load measured distributions of the noise,
+            Pick randomly one noise distribution for each pixel and Initialise also randomly the phases of the
             background noise
             Args:
                 filename_noise_pos: path of the positive noise's filename
@@ -131,13 +134,13 @@ class DvsSensor:
         self.bgn_pos_next = np.zeros((self.shape[0], self.shape[1]), dtype=np.uint64)
         self.bgn_neg_next = np.zeros((self.shape[0], self.shape[1]), dtype=np.uint64)
 
-        # Pick two spectrums for each pixel
+        # Pick two spectra for each pixel (one for ON and one for OFF events)
         id_n = np.random.uniform(0, noise_neg.shape[0], size=(self.shape[0] * self.shape[1])).astype(int)
         id_p = np.random.uniform(0, noise_pos.shape[0], size=(self.shape[0] * self.shape[1])).astype(int)
         self.bgn_hist_pos = noise_pos[id_p, :]
         self.bgn_hist_neg = noise_neg[id_n, :]
 
-        # Normalize spectrums
+        # Normalise noise spectra
         s_p = np.sum(self.bgn_hist_pos, axis=1)
         s_n = np.sum(self.bgn_hist_neg, axis=1)
         id_p = np.where(s_p == 0)
@@ -155,13 +158,14 @@ class DvsSensor:
                                                self.bgn_hist_neg.shape[1],
                                                axis=2)
 
+        # Draw the next noise event time for each pixel
         for x in tqdm(range(0, self.shape[0], 1), desc="Noise Init"):
             for y in range(0, self.shape[1], 1):
                 self.bgn_pos_next[x, y] = np.uint64(self.get_next_noise(x, y, 1) * np.random.uniform(0, 1))
                 self.bgn_neg_next[x, y] = np.uint64(self.get_next_noise(x, y, 0) * np.random.uniform(0, 1))
 
     def init_thresholds(self):
-        """ Initialize the thresholds of the comparators
+        """ Initialise the thresholds of the comparators
             The positive and negative threshold share the same noise, which can be changed if necessary
         """
         self.cur_th_pos = np.clip(np.array(np.random.normal(self.m_th_pos, self.m_th_noise, self.shape),
@@ -170,28 +174,30 @@ class DvsSensor:
                                            dtype=np.double), -1000, 0)
 
     def init_image(self, img):
-        """ Initialize the first flux of the sensor
+        """ Initialise the first flux values of the sensor
         Args:
             img: image whose greylevel corresponds to a radiometric value
+            It is assumed the maximum radiometric value is 1e6
         """
         if img.shape[1] != self.shape[1] or img.shape[0] != self.shape[0]:
             print("Error: the size of the image doesn't match with the sensor ")
             return
-        if len(img.shape) == 3 and img.shape[2] == 3:
-            print("Convert RGB image to Grey CV_RGB2LAB")
-            img = cv2.cvtColor(img, cv2.COLOR_RGB2Lab)[:, :, 0]
-        ind = np.where(img > 0)
-        if len(ind[0])== 0:
-            print("ERROR: init_image: flux image with zeros data")
-            return
-        self.last_v[ind] = np.log(img[ind])
-        self.cur_v[ind] = np.log(img[ind])
-        self.tau_p[ind] = self.tau * 255 / img[ind]
+        # ind = np.where(img > 0)
+        # if len(ind[0])== 0:
+        #     print("ERROR: init_image: flux image with only zeros")
+        #     return
+        # self.last_v[ind] = np.log(img[ind])
+        # self.cur_v[ind] = np.log(img[ind])
+        # self.tau_p[ind] = self.tau * 1e6 / img[ind]
+        # add 1 to image to avoid log(0). Maximum image value is 1e6
+        self.last_v = np.log(img + 1)
+        self.cur_v = np.log(img + 1)
+        self.tau_p = self.tau * np.log(1e6) - (np.log(img + 1))
         self.time_px[:, :] = 0
         self.time = 0
 
     def init_image_ESIM(self, img, time, log_eps=-1):
-        """ Initialize the sensor
+        """ Initialise the sensor
             Follows the algorithm: https://github.com/uzh-rpg/rpg_esim/blob/master/event_camera_simulator/esim/src/event_simulator.cpp
             Args:
                   img: Image of the light in the focal plane
@@ -201,9 +207,6 @@ class DvsSensor:
         if img.shape[1] != self.shape[1] or img.shape[0] != self.shape[0]:
             print("Error: the size of the image doesn't match with the sensor ")
             return
-        if len(img.shape) == 3 and img.shape[2] == 3:
-            print("Convert RGB image to Grey CV_RGB2LAB")
-            img = cv2.cvtColor(img, cv2.COLOR_RGB2Lab)[:, :, 0]
         if log_eps > 0:
             self.last_v = np.log(img + log_eps)
             self.cur_v = np.log(img + log_eps)
@@ -215,8 +218,8 @@ class DvsSensor:
 
     def check_noise(self, dt, img_d):
         """ Generate event packet of noise
-            Check if the time of each pixel did not crossed a next noise event threshold during the next update
-            In this method, every pixel has the same noise.
+            Check if the time of each pixel crossed a next noise event threshold during the update
+            In this method, every pixel has the same noise rate.
             Args:
                 dt: delay between to images (us)
                 img_d: log value of the input image
@@ -332,7 +335,7 @@ class DvsSensor:
             Args:
                 img: radiometric value in the focal plane
                 dt: delay between the frame and the last one (us)
-                debug: return he intermediary values of the voltage before the comparators
+                debug: return the intermediate values for debugging
             Returns:
                 EventBuffer of the created events
              """
@@ -343,10 +346,7 @@ class DvsSensor:
         if img.shape[1] != self.shape[1] or img.shape[0] != self.shape[0]:
             print("Error: the size of the image doesn't match with the sensor ")
             return
-        if len(img.shape) == 3 and img.shape[2] == 3:
-            print("Convert RGB image to Lab and use L")
-            img = cv2.cvtColor(img, cv2.COLOR_RGB2LAB)
-            img = img[:, :, 0]
+
         # Convert in the log domain
         img_d = np.array(img, dtype=np.double)
         ind = np.where(img > 0)
@@ -355,8 +355,10 @@ class DvsSensor:
             return
         img_d[ind] = np.log(img[ind])
         ind = np.where(img_d != 0)
+
         # Update time constants
         self.tau_p[ind] = self.tau * np.log(255) / img_d[ind]
+
         # Update refractory and reset pixels
         ind_ref = np.where(self.cur_ref < self.time + dt)
         if len(ind_ref[0]) > 0:
@@ -369,11 +371,13 @@ class DvsSensor:
                 self.list_ts.append(np.array(self.time_px))
                 self.list_v.append(np.array(self.cur_v))
                 self.list_v_rst.append(np.array(self.last_v))
+
         # Check Noise
         if self.noise_model == NOISE_FREQ:
             pk_noise = self.check_noise(dt, img_d)
         else:
             pk_noise = self.check_noise_hist(dt, img_d)
+
         # Check contrast
         target = np.zeros(img_d.shape)
         target[ind] = self.cur_v[ind] + (img_d[ind] - self.cur_v[ind]) * (1 - np.exp(-np.array(self.time + dt - self.time_px[ind], dtype=float) / self.tau_p[ind]))  # Flux at the end of t + dt
@@ -415,6 +419,7 @@ class DvsSensor:
             ind_pos = np.where(dif > self.cur_th_pos)
             ind_neg = np.where(dif < self.cur_th_neg)
         self.cur_v[ind] = self.cur_v[ind] + (img_d[ind] - self.cur_v[ind]) * (1 - np.exp(-np.array(self.time + dt - self.time_px[ind], dtype=float) / self.tau_p[ind]))
+
         # Update Time
         self.time += dt
         self.time_px[:] = self.time

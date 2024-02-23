@@ -20,8 +20,8 @@ class EventDisplay():
         self.last_frame = 0
         self.frametime = frametime
         self.time_surface = np.zeros((int(dy), int(dx)), dtype=np.uint64)
-        self.pol_surface = np.zeros((int(dy), int(dx)), dtype=np.uint8)
-        self.im = np.zeros((int(dy), int(dx), 3), dtype=np.uint8)
+        self.pol_surface = np.zeros((int(dy), int(dx)), dtype=float)
+        self.im = np.zeros((int(dy), int(dx), 3), dtype=float)
         self.render = render
         self.display_time = display_time
         self.render_tau = 3 * frametime
@@ -47,17 +47,17 @@ class EventDisplay():
         self.last_frame += dt
         if self.last_frame > self.frametime:
             self.last_frame = 0
-            self.im[:] = 125
+            self.im[:] = 0.5
             if self.render == 0:
                 ind = np.where((self.time_surface > self.time - self.frametime) & (self.time_surface <= self.time))
-                self.im[:, :, 0][ind] = self.pol_surface[ind]*255
+                self.im[:, :, 0][ind] = self.pol_surface[ind]
                 self.im[:, :, 1] = self.im[:, :, 0]
                 self.im[:, :, 2] = self.im[:, :, 0]
             if self.render == 1:
                 print(self.time - self.time_surface.max(), self.time - self.time_surface.min())
-                self.im[:, :, 0] = 128 - (self.pol_surface * 2 - 1) * 128 * np.exp(-(self.time - self.time_surface.astype(np.double)) / self.render_tau)
-                self.im[:, :, 1] = 128
-                self.im[:, :, 2] = 128
+                self.im[:, :, 0] = 0.5 - (self.pol_surface - 0.5) * np.exp(-(self.time + dt - self.time_surface.astype(np.double)) / self.render_tau)
+                self.im[:, :, 1] = 0.5
+                self.im[:, :, 2] = 0.5
             if self.display_time: 
                 self.im = cv2.putText(self.im, '{} s'.format(self.time / 1e6), (0, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 255))
             cv2.imshow(self.name, self.im)
