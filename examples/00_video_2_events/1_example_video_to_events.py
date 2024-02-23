@@ -53,9 +53,9 @@ dvs.init_image(im)
 ev_full = EventBuffer(1)
 
 # Create the arbiter - optional, pick from one below
-# ea = BottleNeckArbiter(0.001, time)               # This is a mock arbiter
-# ea = RowArbiter(0.001, time)                      # Old arbiter that handles rows in random order
-ea = SynchronousArbiter(0.1, time, dvs.shape[1])    # DVS346-like arbiter
+# ea = BottleNeckArbiter(0.01, time)                # This is a mock arbiter
+# ea = RowArbiter(0.01, time)                       # Old arbiter that handles rows in random order
+ea = SynchronousArbiter(0.1, time, dvs.shape[1])  # DVS346-like arbiter
 
 # Create the display
 render_timesurface = 1
