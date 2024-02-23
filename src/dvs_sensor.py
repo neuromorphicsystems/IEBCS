@@ -1,6 +1,5 @@
-# Damien JOUBERT 17-01-2020
+# Damien JOUBERT 17-01-2020 - Updated by AvS 23-02-2024
 import numpy as np
-import cv2
 from event_buffer import EventBuffer
 from tqdm import tqdm
 
@@ -19,36 +18,31 @@ NOISE_MEASURE = 2  # Pixels have a noise distribution measured in one lighting c
 
 class DvsSensor:
     """ Class to initialise and simulate the DVS sensor """
-    shape = (50, 50)                                    # (y, x)
-    m_th_pos = 0.2                                      # Mean positive sensitivity (%)
-    m_th_neg = -0.2                                     # Mean negative sensitivity (%)
-    m_th_noise = 0.02                                   # Mean reset noise standard deviation of the transistor (%)
-    m_latency = 100                                     # Mean Latency (us)
-    tau = 100                                           # Time constant (us) of the logarithmic part
-    m_jitter = 30                                       # Mean jitter (us)
-    m_bgn_pos = 0.1                                     # Mean positive background frequency (Hz)
-    m_bgn_neg = 0.01                                    # Mean negative background frequency (Hz)
-    m_bgn_pos_per = np.uint64(1e6 / m_bgn_pos)          # Mean positive background period (us)
-    m_bgn_neg_per = np.uint64(1e6 / m_bgn_neg)          # Mean negative background period (us)
-    ref = 50                                            # Refractory period (us)
-    time = 0                                            # Time of the internal counter (us)
-    noise_model = NOISE_FREQ                            # Model of noise used
-    last_v       = np.zeros(shape, dtype=np.double)     # Voltage of each pixel during the last reset
-    cur_v        = np.zeros(shape, dtype=np.double)     # Voltage of each pixel at the time t
-    cur_th_pos   = np.zeros(shape, dtype=np.double)     # Current Positive Threshold
-    cur_th_neg   = np.zeros(shape, dtype=np.double)     # Current Negative Threshold
-    cur_ref      = np.zeros(shape, dtype=np.uint64)     # Time when the pixel will have to be reset
-    bgn_pos_next = np.zeros(shape, dtype=np.uint64)     # Next expected positive noise event
-    bgn_neg_next = np.zeros(shape, dtype=np.uint64)     # Next expected negative noise event
-    bgn_hist_pos = np.zeros((1, 1, 45), dtype=float)    # Positive noise cumulative distributions
-    bgn_hist_neg = np.zeros((1, 1, 45), dtype=float)    # Negative noise cumulative distributions
-    time_px      = np.zeros(shape, dtype=np.uint64)     # Time t at the pixel (us)
-    tau_p        = np.zeros(shape, dtype=np.double)     # Time constant of each pixel (us)
-
-    # Debug use only
-    list_ts = []    # List of the timestamps used between two frames
-    list_v = []     # List of the v values between two frames
-    list_v_rst = [] # List of the reset v values between two frames
+    # shape = (50, 50)                                    # (y, x)
+    # m_th_pos = 0.2                                      # Mean positive sensitivity (%)
+    # m_th_neg = -0.2                                     # Mean negative sensitivity (%)
+    # m_th_noise = 0.02                                   # Mean reset noise standard deviation of the transistor (%)
+    # m_latency = 100                                     # Mean Latency (us)
+    # tau = 100                                           # Time constant (us) of the logarithmic part at 1 klux
+    # m_jitter = 30                                       # Mean jitter (us)
+    # m_bgn_pos = 0.1                                     # Mean positive background frequency (Hz)
+    # m_bgn_neg = 0.01                                    # Mean negative background frequency (Hz)
+    # m_bgn_pos_per = np.uint64(1e6 / m_bgn_pos)          # Mean positive background period (us)
+    # m_bgn_neg_per = np.uint64(1e6 / m_bgn_neg)          # Mean negative background period (us)
+    # ref = 50                                            # Refractory period (us)
+    # time = 0                                            # Time of the internal counter (us)
+    # noise_model = NOISE_FREQ                            # Model of noise used
+    # last_v       = np.zeros(shape, dtype=np.double)     # Voltage of each pixel during the last reset
+    # cur_v        = np.zeros(shape, dtype=np.double)     # Voltage of each pixel at the time t
+    # cur_th_pos   = np.zeros(shape, dtype=np.double)     # Current Positive Threshold
+    # cur_th_neg   = np.zeros(shape, dtype=np.double)     # Current Negative Threshold
+    # cur_ref      = np.zeros(shape, dtype=np.uint64)     # Time when the pixel will have to be reset
+    # bgn_pos_next = np.zeros(shape, dtype=np.uint64)     # Next expected positive noise event
+    # bgn_neg_next = np.zeros(shape, dtype=np.uint64)     # Next expected negative noise event
+    # bgn_hist_pos = np.zeros((1, 1, 45), dtype=float)    # Positive noise cumulative distributions
+    # bgn_hist_neg = np.zeros((1, 1, 45), dtype=float)    # Negative noise cumulative distributions
+    # time_px      = np.zeros(shape, dtype=np.uint64)     # Time t at the pixel (us)
+    # tau_p        = np.zeros(shape, dtype=np.double)     # Time constant of each pixel (us)
 
     def __init__(self, name):
         """ Init the sensor by creating the Blender Camera
@@ -57,7 +51,7 @@ class DvsSensor:
         """
         self.name = name
 
-    def  set_shape(self, x, y):
+    def set_shape(self, x, y):
         """ Set the shape of the sensor
             Args:
                 x, y: size of the imager
@@ -182,47 +176,19 @@ class DvsSensor:
         if img.shape[1] != self.shape[1] or img.shape[0] != self.shape[0]:
             print("Error: the size of the image doesn't match with the sensor ")
             return
-        # ind = np.where(img > 0)
-        # if len(ind[0])== 0:
-        #     print("ERROR: init_image: flux image with only zeros")
-        #     return
-        # self.last_v[ind] = np.log(img[ind])
-        # self.cur_v[ind] = np.log(img[ind])
-        # self.tau_p[ind] = self.tau * 1e6 / img[ind]
-        # add 1 to image to avoid log(0). Maximum image value is 1e6
         self.last_v = np.log(img + 1)
         self.cur_v = np.log(img + 1)
-        self.tau_p = self.tau * np.log(1e6) - (np.log(img + 1))
+        self.tau_p = self.tau * 1e3 / (img + 1)
         self.time_px[:, :] = 0
         self.time = 0
 
-    def init_image_ESIM(self, img, time, log_eps=-1):
-        """ Initialise the sensor
-            Follows the algorithm: https://github.com/uzh-rpg/rpg_esim/blob/master/event_camera_simulator/esim/src/event_simulator.cpp
-            Args:
-                  img: Image of the light in the focal plane
-                  time: time of the start (us)
-                  log_eps: constant to avoid log(0)
-        """
-        if img.shape[1] != self.shape[1] or img.shape[0] != self.shape[0]:
-            print("Error: the size of the image doesn't match with the sensor ")
-            return
-        if log_eps > 0:
-            self.last_v = np.log(img + log_eps)
-            self.cur_v = np.log(img + log_eps)
-        else:
-            self.last_v = img
-            self.cur_v = img
-        self.time = time
-        self.cur_ref[:] = 0
-
-    def check_noise(self, dt, img_d):
+    def check_noise(self, dt, img_l):
         """ Generate event packet of noise
-            Check if the time of each pixel crossed a next noise event threshold during the update
+            Check if the time at each pixel crossed a next noise event threshold during the update
             In this method, every pixel has the same noise rate.
             Args:
                 dt: delay between to images (us)
-                img_d: log value of the input image
+                img_l: log value of the input image
             Returns:
                 A packet of events of type EventBuffer
         """
@@ -233,24 +199,24 @@ class DvsSensor:
             pk_noise.add_array(self.bgn_pos_next[ind_pos_noise], ind_pos_noise[0], ind_pos_noise[1], 1)
             self.time_px[ind_pos_noise] = self.bgn_pos_next[ind_pos_noise]
             self.bgn_pos_next[ind_pos_noise] += self.m_bgn_pos_per
-            self.cur_v[ind_pos_noise] = img_d[ind_pos_noise]
-            self.last_v[ind_pos_noise] = img_d[ind_pos_noise]
+            self.cur_v[ind_pos_noise] = img_l[ind_pos_noise]
+            self.last_v[ind_pos_noise] = img_l[ind_pos_noise]
         if len(ind_neg_noise[0]) > 0:
             pk_noise.add_array(self.bgn_neg_next[ind_neg_noise], ind_neg_noise[0], ind_neg_noise[1], 0)
             self.time_px[ind_neg_noise] = self.bgn_neg_next[ind_neg_noise]
             self.bgn_neg_next[ind_neg_noise] += self.m_bgn_neg_per
-            self.cur_v[ind_neg_noise] = img_d[ind_neg_noise]
-            self.last_v[ind_neg_noise] = img_d[ind_neg_noise]
+            self.cur_v[ind_neg_noise] = img_l[ind_neg_noise]
+            self.last_v[ind_neg_noise] = img_l[ind_neg_noise]
         pk_noise.sort()
         return pk_noise
 
-    def check_noise_hist(self, dt, img_d):
+    def check_noise_hist(self, dt, img_l):
         """ Generate event packet of noise
-            Check if the time of each pixel did not crossed a next noise event threshold during the next update
-            This version include the use of the histogram of the noise
+            Check if the time at each pixel crossed a next noise event threshold during the update
+            This method uses a measured noise distribution for each pixel
             Args:
                   dt: delay between two updates (us)
-                  img_d: logarithmic value of the input image
+                  img_l: logarithmic value of the input image
             Returns:
                 A packet of events of type EventBuffer
         """
@@ -260,16 +226,16 @@ class DvsSensor:
         if len(ind_pos_noise[0]) > 0:
             pk_noise.add_array(self.bgn_pos_next[ind_pos_noise], ind_pos_noise[0], ind_pos_noise[1], 1)
             self.time_px[ind_pos_noise] = self.bgn_pos_next[ind_pos_noise]
-            self.cur_v[ind_pos_noise] = img_d[ind_pos_noise]
-            self.last_v[ind_pos_noise] = img_d[ind_pos_noise]
+            self.cur_v[ind_pos_noise] = img_l[ind_pos_noise]
+            self.last_v[ind_pos_noise] = img_l[ind_pos_noise]
             for i in range(0, len(ind_pos_noise[0]), 1):
                 self.bgn_pos_next[ind_pos_noise[0][i], ind_pos_noise[1][i]] += \
                     self.get_next_noise(ind_pos_noise[1][i], ind_pos_noise[0][i], 1)
         if len(ind_neg_noise[0]) > 0:
             pk_noise.add_array(self.bgn_neg_next[ind_neg_noise], ind_neg_noise[0], ind_neg_noise[1], 0)
             self.time_px[ind_neg_noise] = self.bgn_neg_next[ind_neg_noise]
-            self.cur_v[ind_neg_noise] = img_d[ind_neg_noise]
-            self.last_v[ind_neg_noise] = img_d[ind_neg_noise]
+            self.cur_v[ind_neg_noise] = img_l[ind_neg_noise]
+            self.last_v[ind_neg_noise] = img_l[ind_neg_noise]
             for i in range(0, len(ind_neg_noise[0]), 1):
                 self.bgn_neg_next[ind_neg_noise[0][i], ind_neg_noise[1][i]] += \
                     self.get_next_noise(ind_neg_noise[1][i], ind_neg_noise[0][i], 0)
@@ -295,197 +261,195 @@ class DvsSensor:
             next = FREQ[ind[0][0]]
         return np.uint64(1e6 / next)
 
-    def get_latency(self, time_end, last_v, cur_th_pos, cur_v, img_d, time_px):
+    def get_latency(self, time_end, last_v, cur_th, cur_v, img_l, time_px):
         """ Obtain the latency of the pixel
-            Method: Linearly interpolates the time when it crosses the threshold and add the constant latency of the
-            comparator stage.
+            Method: Linearly interpolates the time when it crosses the threshold 
+                    and add the constant latency of the comparator stage.
             Args:
                 time_end: time of the change (us)
-                last_v: voltage of the last spike (np.array)
-                cur_th_pos: threshold (np.array)
+                last_v: voltage at the last spike (np.array)
+                cur_th: threshold (np.array)
                 cur_v: voltage at time_px (np.array)
                 last_v: voltage during the last spike (np.array)
             Returns:
-                a np.array of the latencies in us
+                np.array of the latencies in us
         """
-        return np.uint64((last_v + cur_th_pos - cur_v) / (img_d - cur_v) * (time_end - time_px) + \
-               np.clip(np.random.normal(self.m_latency, self.m_jitter, last_v.shape[0]), 0, 1e6))
+        return np.uint64((last_v + cur_th - cur_v) / (img_l - cur_v) * (time_end - time_px) + \
+               np.random.normal(self.m_latency, self.m_jitter, last_v.shape[0]))
 
-    def get_latency_tau(self, cur_th_pos, cur_v, img_d, tau_p):
+    def get_latency_tau(self, cur_th, cur_v, img_l, tau_p):
         """ Obtain the latency of the pixel
-            Method: First order low pass filter interpolation of the time when it crosses the threshold and add the constant latency of the
-            comparator stage
+            Method: First order low pass filter interpolation of the time when 
+                    it crosses the threshold and add the constant latency of the
+                    comparator stage
             Args:
-                last_v: voltage of the last spike
-                cur_th_pos: voltage to reach to cross the threshold
+                last_v: voltage at the last spike
+                cur_th: threshold
                 cur_v: voltage at time_px
                 tau_p: time constants of the pixels
             Returns:
-                a np.array of the latencies in us
+                np.array of the latencies in us
         """
-        amp = np.divide(cur_th_pos - cur_v, img_d - cur_v)
-        # Correct numerical errors
-        jit = np.sqrt(self.m_jitter ** 2 + np.power(self.m_th_noise * tau_p / (img_d - cur_v), 2))
-        t_ev = np.uint64(np.clip(np.random.normal(self.m_latency - tau_p*np.log(1 - amp), jit), 0, 10000))
-        return t_ev
+        amp = np.divide(cur_th - cur_v, img_l - cur_v)
+        jit = np.sqrt(self.m_jitter ** 2 + np.power(self.m_th_noise * tau_p / (img_l - cur_v), 2))
+        t_ev = np.random.normal(self.m_latency - tau_p*np.log(1 - amp), jit)
+        return np.uint64(np.clip(t_ev, 0, 10000))
 
-    def update(self, img, dt, debug=False):
+    def update(self, img, dt):
         """ Update the sensor with a nef irradiance's frame
             Follow the ICNS model
             Args:
                 img: radiometric value in the focal plane
                 dt: delay between the frame and the last one (us)
-                debug: return the intermediate values for debugging
             Returns:
                 EventBuffer of the created events
              """
-        if debug:
-            self.list_ts.append(np.array(self.time_px))
-            self.list_v.append(np.array(self.cur_v))
-            self.list_v_rst.append(np.array(self.last_v))
         if img.shape[1] != self.shape[1] or img.shape[0] != self.shape[0]:
             print("Error: the size of the image doesn't match with the sensor ")
             return
 
         # Convert in the log domain
-        img_d = np.array(img, dtype=np.double)
+        img_l = np.array(img, dtype=np.double)
         ind = np.where(img > 0)
         if len(ind[0]) == 0:
-            print("ERROR: update: flux image with only zeros data")
+            print("ERROR: update: flux image with only zeros")
             return
-        img_d[ind] = np.log(img[ind])
-        ind = np.where(img_d != 0)
+        img_l[ind] = np.log(img[ind] + 1)
 
-        # Update time constants
-        self.tau_p[ind] = self.tau * np.log(1e6) / img_d[ind]
+        # Update time constants - self.tau defined at 1 klux
+        self.tau_p[ind] = self.tau * 1e3 / (img[ind] + 1)
 
         # Update refractory and reset pixels
         ind_ref = np.where(self.cur_ref < self.time + dt)
+        px_delta_ref = np.array(self.cur_ref[ind_ref] - self.time, dtype=float)
         if len(ind_ref[0]) > 0:
-            self.last_v[ind_ref] = self.cur_v[ind_ref] + (img_d[ind_ref] - self.cur_v[ind_ref]) * \
-                                (1 - np.exp(-(np.array(self.cur_ref[ind_ref] - self.time, dtype=float)) / self.tau_p[ind_ref]))
+            # Calculate voltage at the reset time (end of refractory period)
+            self.last_v[ind_ref] = self.cur_v[ind_ref] + (img_l[ind_ref] - self.cur_v[ind_ref]) * \
+                                (1 - np.exp(-px_delta_ref / self.tau_p[ind_ref]))
+            # End the refractory period
             self.time_px[ind_ref] = self.cur_ref[ind_ref]
             self.cur_ref[ind_ref] = -1
+            # And update the reference voltage for these pixels
             self.cur_v[ind_ref] = self.last_v[ind_ref]
-            if debug:
-                self.list_ts.append(np.array(self.time_px))
-                self.list_v.append(np.array(self.cur_v))
-                self.list_v_rst.append(np.array(self.last_v))
 
-        # Check Noise
+        # Get noise events and reset pixels
         if self.noise_model == NOISE_FREQ:
-            pk_noise = self.check_noise(dt, img_d)
+            pk_noise = self.check_noise(dt, img_l)
         else:
-            pk_noise = self.check_noise_hist(dt, img_d)
+            pk_noise = self.check_noise_hist(dt, img_l)
 
-        # Check contrast
-        target = np.zeros(img_d.shape)
-        target[ind] = self.cur_v[ind] + (img_d[ind] - self.cur_v[ind]) * (1 - np.exp(-np.array(self.time + dt - self.time_px[ind], dtype=float) / self.tau_p[ind]))  # Flux at the end of t + dt
+        # Calculate voltage change at the end of the frame
+        px_delta_t = np.array(self.time + dt - self.time_px[ind], dtype=float)
+        target = np.zeros(img_l.shape) 
+        target[ind] = self.cur_v[ind] + (img_l[ind] - self.cur_v[ind]) * \
+                    (1 - np.exp(-px_delta_t / self.tau_p[ind]))  
         dif = target - self.last_v
+
+        # Check in which pixels the change is larger than the thresholds
         ind_pos = np.where((dif > self.cur_th_pos) & (self.cur_ref == np.uint64(-1)))
         ind_neg = np.where((dif < self.cur_th_neg) & (self.cur_ref == np.uint64(-1)))
+
+        # Generate events for these pixels
         pk = EventBuffer(0)
         while len(ind_pos[0]) + len(ind_neg[0]) > 0:
             pk.increase(len(ind_pos[0]) + len(ind_neg[0]))
-            # Positive
+
+            # ON events
             if len(ind_pos[0]) > 0:
-                t_event = self.get_latency_tau(self.last_v[ind_pos] + self.cur_th_pos[ind_pos], self.cur_v[ind_pos], img_d[ind_pos], self.tau_p[ind_pos])
+                # Get event times
+                # Use this for first order interpolation
+                t_event = self.get_latency_tau(
+                    self.last_v[ind_pos] + self.cur_th_pos[ind_pos], 
+                    self.cur_v[ind_pos], 
+                    img_l[ind_pos], 
+                    self.tau_p[ind_pos]
+                )
+                # Or this for linear interpolation
+                # t_event = self.get_latency(self.time + dt, 
+                #                            self.last_v[ind_pos], 
+                #                            self.cur_th_pos[ind_pos], 
+                #                            self.cur_v[ind_pos], 
+                #                            img_l[ind_pos], 
+                #                            self.time_px[ind_pos]
+                # )
+                # Add to the event buffer
                 pk.add_array(self.time_px[ind_pos] + t_event, ind_pos[0], ind_pos[1], 1)
-                self.cur_th_pos[ind_pos] = np.clip(np.random.normal(self.m_th_pos, self.m_th_noise, len(ind_pos[0])), 0, 1000)
+                # Update the threshold with noise
+                self.cur_th_pos[ind_pos] = np.clip(
+                    np.random.normal(self.m_th_pos, self.m_th_noise, len(ind_pos[0])), 
+                    0, 
+                    1000
+                )
+                # Start the refractory period for those pixels that fired
                 self.cur_ref[ind_pos] = self.time_px[ind_pos] + t_event + self.ref
-            # Negative
+
+            # OFF events
             if len(ind_neg[0]) > 0:
-                t_event = self.get_latency_tau(self.last_v[ind_neg] + self.cur_th_neg[ind_neg], self.cur_v[ind_neg], img_d[ind_neg], self.tau_p[ind_neg])
+                # Get event times
+                # Use this for first order interpolation
+                t_event = self.get_latency_tau(
+                    self.last_v[ind_neg] + self.cur_th_neg[ind_neg], 
+                    self.cur_v[ind_neg], 
+                    img_l[ind_neg], 
+                    self.tau_p[ind_neg]
+                )
+                # Or this for linear interpolation
+                # t_event = self.get_latency(self.time + dt, 
+                #                            self.last_v[ind_neg], 
+                #                            self.cur_th_neg[ind_neg], 
+                #                            self.cur_v[ind_neg], 
+                #                            img_l[ind_neg], 
+                #                            self.time_px[ind_neg]
+                # )
+                # Add to the event buffer
                 pk.add_array(self.time_px[ind_neg] + t_event, ind_neg[0], ind_neg[1], 0)
-                self.cur_th_neg[ind_neg] = np.clip(np.random.normal(self.m_th_neg, self.m_th_noise, len(ind_neg[0])), -1000, 0)
+                # Update the threshold with noise
+                self.cur_th_neg[ind_neg] = np.clip(
+                    np.random.normal(self.m_th_neg, self.m_th_noise, len(ind_neg[0])), 
+                    -1000, 
+                    0
+                )
+                # Start the refractory period for those pixels that fired
                 self.cur_ref[ind_neg] = self.time_px[ind_neg] + t_event + self.ref
-            pk.sort()
-            # Update refractory
+
+            # Check if any of these refractory periods finish before the end of the frame
             ind_ref = np.where(self.cur_ref < self.time + dt)
+            px_delta_ref = np.array(self.cur_ref[ind_ref]-self.time_px[ind_ref], dtype=float)
             if len(ind_ref[0]) > 0:
-                self.last_v[ind_ref] = self.cur_v[ind_ref] + (img_d[ind_ref] - self.cur_v[ind_ref]) * \
-                                       (1 - np.exp(-(np.array(self.cur_ref[ind_ref]-self.time_px[ind_ref], dtype=float)) / self.tau_p[ind_ref]))
+                # Calculate voltage at the reset time (end of refractory period)
+                self.last_v[ind_ref] = self.cur_v[ind_ref] + (img_l[ind_ref] - self.cur_v[ind_ref]) * \
+                                       (1 - np.exp(-px_delta_ref / self.tau_p[ind_ref]))
+                # End the refractory period
                 self.time_px[ind_ref] = self.cur_ref[ind_ref]
                 self.cur_ref[ind_ref] = -1
+                # And update the reference voltage for these pixels
                 self.cur_v[ind_ref] = self.last_v[ind_ref]
-                if debug:
-                    self.list_ts.append(np.array(self.time_px))
-                    self.list_v.append(np.array(self.cur_v))
-                    self.list_v_rst.append(np.array(self.last_v))
+
+            # Now check if there are any new threshold crossings since the previous event
             dif = np.zeros((self.shape[0], self.shape[1]))
-            target[ind_ref] = self.cur_v[ind_ref] + (img_d[ind_ref] - self.cur_v[ind_ref]) * (
-                        1 - np.exp(-np.array(self.time + dt - self.time_px[ind_ref], dtype=float) / self.tau_p[ind_ref]))
+            px_delta_ref = np.array(self.time + dt - self.time_px[ind_ref], dtype=float)
+            target[ind_ref] = self.cur_v[ind_ref] + (img_l[ind_ref] - self.cur_v[ind_ref]) * \
+                                (1 - np.exp(-px_delta_ref / self.tau_p[ind_ref]))
             dif[ind_ref] = target[ind_ref] - self.last_v[ind_ref]
             ind_pos = np.where(dif > self.cur_th_pos)
             ind_neg = np.where(dif < self.cur_th_neg)
-        self.cur_v[ind] = self.cur_v[ind] + (img_d[ind] - self.cur_v[ind]) * (1 - np.exp(-np.array(self.time + dt - self.time_px[ind], dtype=float) / self.tau_p[ind]))
+            # Repeat this loop until no more threshold crossings are found
 
-        # Update Time
+        # Update pixel voltages at end of frame
+        px_delta_t = np.array(self.time + dt - self.time_px[ind], dtype=float)
+        self.cur_v[ind] = self.cur_v[ind] + (img_l[ind] - self.cur_v[ind]) * \
+                                (1 - np.exp(-px_delta_t / self.tau_p[ind]))
+
+        # Update simulation time
         self.time += dt
         self.time_px[:] = self.time
-        if debug:
-            self.list_ts.append(np.array(self.time_px))
-            self.list_v.append(np.array(self.cur_v))
-            self.list_v_rst.append(np.array(self.last_v))
+
+        # Merge noise and signal events and sort by time
         pk_end = EventBuffer(0)
         pk_end.merge(pk, pk_noise)
-        if debug: 
-            print('{} Noise event, {} signal events'.format(pk_noise.i, pk.i))
+        pk_end.sort()
+        
         return pk_end
 
-    def update_esim(self, im, time, log_eps=-1):
-        """ Update the sensor with a nef irradiance's frame
-            Follow the ESIM model:
-            https://github.com/uzh-rpg/rpg_esim/blob/master/event_camera_simulator/esim/src/event_simulator.cpp
-            In this algoritm, self.cur_ref is used to store the last event generated
-            Args:
-                img: radiometric value in the focal plane
-                dt: delay between the frame and the last one (us)
-            Returns:
-                EventBuffer of the created events
-             """
-        tolerance = 1e-6
-        preprocessed_img = np.array(im)
-        if log_eps != -1:
-            preprocessed_img = np.log(log_eps + im)
-        if np.sum(self.last_v) == 0:
-            self.init_image_ESIM(preprocessed_img, time)
-            return
-        ev = EventBuffer(0)
-        delta_t = time - self.time
-        for x in range(0, self.shape[1], 1):
-            for y in range(0, self.shape[0], 1):
-                itdt = preprocessed_img[y, x]
-                it = self.cur_v[y, x]
-                prev_cross = self.last_v[y, x]  # ref_values_ is self.last_v
-                if abs(it - itdt) > tolerance:
-                    pol = 1.0 if itdt >= it else -1.0
-                    C = self.m_th_pos if pol > 0 else self.m_th_neg
-                    sigma_C = self.m_th_noise  # Single reset noise
-                    if sigma_C > 0:
-                        C += np.random.normal(0, sigma_C, 1)
-                        C = 0.01 if C  < 0.01 else C
-                    curr_cross = prev_cross
-                    while True:
-                        curr_cross += pol * C
-                        if (pol > 0 and  curr_cross > it and curr_cross <= itdt) or \
-                                (pol < 0 and curr_cross < it and curr_cross >= itdt):
-                            edt = (curr_cross - it) * delta_t / (itdt - it)
-                            t = self.time + edt
-                            last_stamp_at_xy = self.cur_ref[y, x]
-                            dt = t - last_stamp_at_xy
-                            if last_stamp_at_xy == 0 or dt >= self.ref:
-                                ev.add(t, y, x, pol)
-                                self.cur_ref[y, x] = t
-                            else:
-                                print("Dropping event because time since last event ",
-                                      str(dt), " ns) < refractory period (", str(self.ref), " us).")
-                            self.last_v[y, x] = curr_cross
-                        else:
-                            break
-        self.time = time
-        self.last_v = preprocessed_img
-        ev.sort()
-        return ev
 
 

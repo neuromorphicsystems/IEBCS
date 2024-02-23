@@ -55,9 +55,9 @@ class EventDisplay():
                 self.im[:, :, 2] = self.im[:, :, 0]
             if self.render == 1:
                 print(self.time - self.time_surface.max(), self.time - self.time_surface.min())
-                self.im[:, :, 0] = 0.5 - (self.pol_surface - 0.5) * np.exp(-(self.time + dt - self.time_surface.astype(np.double)) / self.render_tau)
-                self.im[:, :, 1] = 0.5
-                self.im[:, :, 2] = 0.5
+                self.im[:, :, 0] = 0.5
+                self.im[:, :, 1] = 0.5 + (self.pol_surface - 0.5) * np.exp(-(self.time + dt - self.time_surface.astype(np.double)) / self.render_tau)
+                self.im[:, :, 2] = 0.5 + (self.pol_surface - 0.5) * np.exp(-(self.time + dt - self.time_surface.astype(np.double)) / self.render_tau)
             if self.display_time: 
                 self.im = cv2.putText(self.im, '{} s'.format(self.time / 1e6), (0, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 255))
             cv2.imshow(self.name, self.im)
