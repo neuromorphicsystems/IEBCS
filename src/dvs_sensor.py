@@ -357,7 +357,7 @@ class DvsSensor:
         ind = np.where(img_d != 0)
 
         # Update time constants
-        self.tau_p[ind] = self.tau * np.log(255) / img_d[ind]
+        self.tau_p[ind] = self.tau * np.log(1e6) / img_d[ind]
 
         # Update refractory and reset pixels
         ind_ref = np.where(self.cur_ref < self.time + dt)
