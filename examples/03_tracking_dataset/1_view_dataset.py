@@ -1,18 +1,15 @@
 import cv2
-from cv2 import data
 import numpy as np
-import os
-import sys
 import h5py
-cur_dir = os.getcwd()
-sys.path.append(cur_dir + "/../../src")
+
 dir_res = "track_dataset_v3"
-nb_display = 1
+nb_display = 27
 tw = 4000
 res = [260, 346]
 img = np.zeros((res[0], res[1], 3), dtype=np.uint8)
 fourcc = cv2.VideoWriter_fourcc('M', 'J', 'P', 'G')
 out = cv2.VideoWriter('trackDataset.avi', fourcc, 100.0, (res[1], res[0]))
+
 for id in range(1, nb_display + 1, 1):
     datafile = h5py.File('{}/{}_event.h5'.format(dir_res, id), 'r+')
     events = np.array(datafile["events"]["recording"])
