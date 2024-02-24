@@ -9,12 +9,12 @@ import os
 import sys
 
 cur_dir = os.getcwd()
-sys.path.append(cur_dir + "/../../src")
+sys.path.append(cur_dir + "./src")
 
 type = "NMNIST_test"
 
 
-path_NMNIST = "../../data/"
+path_NMNIST = "./data/"
 
 if not os.path.exists(path_NMNIST + "tmp"):
     os.mkdir(path_NMNIST + "tmp")
@@ -29,7 +29,7 @@ path_text = path_NMNIST + "tmp/text/"
 if os.path.exists(path_text + "NMNIST_lab.npy"):
     print("Textures already generated, please make sure everything is archived")
 else:
-    mndata = MNIST("../../data/mnist/")
+    mndata = MNIST("./data/mnist/")
     images, labels = mndata.load_training() if type == "NMNIST_train" else mndata.load_testing() 
     images = np.array(images)
     labels = np.array(labels)

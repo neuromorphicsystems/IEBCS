@@ -20,7 +20,12 @@ This Figure summarizes the differences with other simulators, namely:
 Tested on MacOS with Python 3.10, but there is no reason it should not work on Linux or Windows.
 Example 2 uses Blender, for which the current version only works with Python 3.10.
 
-Create a virtual environment using conda:
+Accept the XCode license from the command line if you haven't to enable the compiler
+```
+sudo xcodebuild -license
+```
+
+Create a virtual environment using conda on MacOS:
 ```
 conda env create -f simuDVSICNS_MacOS.yml 
 conda activate IEBCS

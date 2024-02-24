@@ -10,12 +10,12 @@ from dat_files import load_dat_event
 fourcc = cv2.VideoWriter_fourcc('M', 'J', 'P', 'G')
 filename = '../ev_100_10_100_40_0.4_0.01.dat'
 ts, x, y, p = load_dat_event(filename)
-res = [720, 1280]
-out = cv2.VideoWriter('{}.avi'.format(filename[:-4]), fourcc, 20.0, (res[1], res[0]))
+res = [1280, 720]
+out = cv2.VideoWriter('{}.avi'.format(filename[:-4]), fourcc, 20.0, (res[0], res[1]))
 tw = 1000
-img         = np.zeros((res[0], res[1]), dtype=np.int8)
-tsurface    = np.zeros((res[0], res[1]), dtype=np.int64)
-indsurface  = np.zeros((res[0], res[1]), dtype=np.int64)
+img         = np.zeros((res[1], res[0]), dtype=float)
+tsurface    = np.zeros((res[1], res[0]), dtype=np.int64)
+indsurface  = np.zeros((res[1], res[0]), dtype=np.int8)
 
 for t in range(ts[0], ts[-1], tw):
     # Get events in the current time window
@@ -26,7 +26,7 @@ for t in range(ts[0], ts[-1], tw):
     tsurface[y[ind], x[ind]] = t + tw
 
     # And another holding their polarity (use -1 for OFF events)
-    indsurface[y[ind], x[ind]] = 2 * p[ind] - 1
+    indsurface[y[ind], x[ind]] = 2.0 * p[ind] - 1
 
     # Find which pixels to process
     ind = np.where(tsurface > 0)
