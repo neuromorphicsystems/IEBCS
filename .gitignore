@@ -2,3 +2,7 @@
 .DS_Store
 .idea/*
 src/__pycache__/*
+.vscode/*
+cpp/build/*
+cpp/dist/*
+cpp/dsi.egg-info/*
