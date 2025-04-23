@@ -2,3 +2,5 @@
 .DS_Store
 .idea/*
 src/__pycache__/*
+/data/hummingbird_video.mp4
+/examples/00_video_2_events/outputs/

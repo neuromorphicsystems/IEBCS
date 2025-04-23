@@ -1,13 +1,11 @@
 # IEBCS
 ICNS Event Based Camera Simulator 
 
-Available in Matlab and Python.
+The code base has been recently cut down to a maintainable reference python implementation. For now, if you want the blender interoperability or the C++ implementation, download a previous version of this repository at your own risk.
 
-This repository presents the simulator used at ICNS to assess EBC. It contains:
-* /cpp/: C++ implementation of the pixel simulation model and the interface Python/C++. 
-* /matlab/: interface Matlab/C++
+This repository contains:
 * /data/: Stores distributions used to sample the noise of the sensor and other resources. 
-* /examples/: Several different ways of using the simulator (see below)'*
+* /examples/: An example of loading frames, and passing them as input to the simulator.
 
 This Figure summarizes the differences with others tools, such as 
 [ESIM](https://github.com/uzh-rpg/rpg_esim) and 
@@ -17,81 +15,43 @@ This Figure summarizes the differences with others tools, such as
 
 ## -- Requirements -- 
 
-Tested on MacOS with Python 3.10, but there is no reason it should not work on Linux or Windows.
+Tested with Python 3.12.
 
 Create a virtual environment using conda:
 ```
-conda env create -f simuDVSICNS_MacOS.yml 
-conda activate IEBCS
-```
-
-To use the C++ interface, run compile_test.sh to install and test the Python/C++ interface.
-```
-cd cpp
-./compile_test.sh
-```
-
-This uses the python build module, which can also be installed with pip:
-```
-pip install build
+pip install opencv-python
+pip install tqdm
 ```
 
 Additional requirements: 
-* pytube: example 00 downloads a video from youtube.
-* Blender: examples 01 and 02 are using [Blender 3.6](https://pypi.org/project/bpy/), which can be installed with pip.
-* MNIST: example 02 uses the MNIST dataset, the [specific package](https://pypi.org/project/python-mnist/) that is used in this case can be installed using pip.
+* yt-dlp: example 00 downloads a video from youtube.
 ```
-conda install -c conda-forge pytube
-pip install bpy
-pip install python-mnist
+pip install yt-dlp
 ```
 
 ## -- Examples --
 
 ### 00: Video -> events
 
-Simulate events from a video. To initialize the C++ sensor:
-```
-dsi.initSimu(cap.get(cv2.CAP_PROP_FRAME_HEIGHT), cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-dsi.initLatency(200, 50, 50, 300)
-dsi.initContrast(0.3, 0.3, 0.05)
-init_bgn_hist_cpp("../../data/noise_pos_161lux.npy", "../../data/noise_pos_161lux.npy")
-```
-The first line initialize the definition of the sensor, then:  
-* latency = 200 μs   
-* jitter = 50 μs  
-* refractory period = 50 μs  
-* time constant log front-end = 300 μs
-* positive/negative log threshold = 0.3  
-* threshold mismatch = 0.05  
+Simulate events from a video.
+
+The example sets up a sensor with the following parameters:  
+* latency = 100 μs   
+* jitter = 10 μs  
+* refractory period = 100 μs  
+* time constant log front-end = 40 μs
+* positive/negative log threshold = 0.4  
+* threshold noise = 0.01  
 * The noise is sampled from 2 distributions acquired with a real sensor under 161lux.
 <img src="data/img/aps_00.gif" alt="drawing" width="300"/>
 <img src="data/img/ev_00.gif" alt="drawing" width="300"/>
 
-The artifacts are due to the low framerate compared to the speed of the wings. This can be compensated using slow motion estimations as done in V2E, provided that the estimation is not adding noise. 
+The artifacts are due to the low framerate compared to the speed of the wings. This can be improved by using high frame rate video, or by generating intermediate frames.
 
-### 01: Blender spinning cube
+To use, first make sure your working directory is:
+```
+examples/00_video_to_events
+```
 
-This example shows how to render a camera rotating in front of a textured cube. In this case, the object is rendered every ms. In this case, the cheese textured is a Fourme d'Ambert (blue cheese).
-0_example_spinning_cube.py runs the experiment, generates event based data, and saves the result to disk. 1_make_video.py generates a visualisation of the event based data.
-
-<img src="data/img/aps_01.gif" alt="drawing" width="300"/>
-<img src="data/img/ev_01.gif" alt="drawing" width="300"/>
-
-
-### 02: Blender custom NMNIST
-
-The NMNIST dataset is simulated (for 10 digits here). 
-The script "0_generate_textures_MNIST.py" create the texture used in blender to generate the saccadic movement: 
-And the script "1_saccades_NMNIST.py" generates the images from Blender and runs the simulator. 2_make_video.py generates a visualisation of the event based data. Note that compared to the previous example, all the positions of the camera are computed first and then Blender is called to render this sequence faster. 
-Finally, the script "nmnist_util.py" provides some API to read the spikes and the labels if you want to use your favorite ML framework.
-
-<img src="data/img/aps_02.gif" alt="drawing" width="50"/>
-<img src="data/img/ev_02.gif" alt="drawing" width="50"/>
-
-### 03: Tracking dataset
-
-This script generates a tracking dataset with object of various size and contrasts.  
-<img src="data/img/ev_03.gif" alt="drawing" width="200"/> 
-
-Every object has its own spike and ground truth file.
+Then run the python files contained within this directory in order.
+A video showing events, as well as the event file in binary format, should be generated within the `./output` directory.

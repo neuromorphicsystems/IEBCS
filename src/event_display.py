@@ -1,4 +1,3 @@
-# Damien JOUBERT 17-01-2020
 import numpy as np
 import cv2
 
@@ -66,13 +65,6 @@ class EventDisplay():
             if self.display_time: self.im = cv2.putText(self.im, '{} s'.format(self.time / 1e6), (0, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 255))
             cv2.imshow(self.name, self.im)
             cv2.waitKey(10)
-
-
-
-
-
-
-
 
 
 

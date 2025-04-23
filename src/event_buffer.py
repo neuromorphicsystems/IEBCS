@@ -1,7 +1,6 @@
-# Damien JOUBERT 17-01-2020
+import numpy
 import numpy as np
-import os.path
-from dat_files import write_event_dat, write_event_es, write_event_csv, load_dat_event
+from dat_files import write_event_dat
 
 
 class EventBuffer():
@@ -17,20 +16,13 @@ class EventBuffer():
             Args:
                 size: size of the new buffer, Minimum: 1
         """
-        if isinstance(size, str):
-            ts, x, y, pol = load_dat_event(size)
-            self.ts = np.array(ts, dtype=np.uint64)
-            self.x = np.array(x, dtype=np.uint16)
-            self.y = np.array(y, dtype=np.uint16)
-            self.p = np.array(pol, dtype=np.uint8)
-            self.i = ts.shape[0]
-        else:
-            if size == 0:
-                size = 1
-            self.x = np.zeros(size, dtype=np.uint16)
-            self.y = np.zeros(size, dtype=np.uint16)
-            self.p = np.zeros(size, dtype=np.uint8)
-            self.ts = np.zeros(size, dtype=np.uint64)
+        if size == 0:
+            size = 1
+        self.x = np.zeros(size, dtype=np.uint16)
+        self.y = np.zeros(size, dtype=np.uint16)
+        self.p = np.zeros(size, dtype=np.uint8)
+        self.ts = np.zeros(size, dtype=np.uint64)
+        self.i = 0
 
     def get_x(self):
         return self.x[:self.i]
@@ -47,7 +39,7 @@ class EventBuffer():
     def increase(self, nsize):
         """ Increase the size of a buffer to self.shape[0] size + nsize
             Args:
-                nsize: number of free space added
+                nsize: number of free space elements to add
         """
         prev_shape = self.x.shape[0]
         x = np.zeros(prev_shape + nsize, dtype=np.uint16)
@@ -64,7 +56,10 @@ class EventBuffer():
         self.ts = ts
 
     def remove_time(self, t_min, t_max):
-        ind = np.where((self.ts < t_min)|(self.ts > t_max))
+        """
+            Only keep events between t_min and t_max
+        """
+        ind = np.where((self.ts < t_min) | (self.ts > t_max))
         self.x = np.delete(self.x, ind)
         self.y = np.delete(self.y, ind)
         self.ts = np.delete(self.ts, ind)
@@ -78,11 +73,11 @@ class EventBuffer():
         if self.i - nsize < 0:
             nsize = self.i
         ind = np.arange(0, nsize, 1)
-        self.i = self.i-nsize
         self.x = np.delete(self.x, ind)
         self.y = np.delete(self.y, ind)
         self.ts = np.delete(self.ts, ind)
         self.p = np.delete(self.p, ind)
+        self.i = self.i - nsize
 
     def remove_ev(self, p):
         """
@@ -94,23 +89,24 @@ class EventBuffer():
         self.y = np.delete(self.y, p)
         self.ts = np.delete(self.ts, p)
         self.p = np.delete(self.p, p)
+        self.i -= 1
 
     def remove_row(self, r, t):
         """
-            Remove the event in the row r at the time t
+            Remove the event in row r at time t
         """
         if t == -1:
             ind = np.where((self.y == r) & (self.ts > 0))
         else:
             ind = np.where((self.y == r) & (self.ts < t) & (self.ts > 0))
-        self.i -= ind[0].shape[0]
         self.x = np.delete(self.x, ind)
         self.y = np.delete(self.y, ind)
         self.ts = np.delete(self.ts, ind)
         self.p = np.delete(self.p, ind)
+        self.i -= ind[0].shape[0]
 
     def increase_ev(self, ev):
-        """ Increase the event buffer with anotehr event buffer
+        """ Extend the event buffer with another event buffer
             If ev can be inserted into self, ev inserted, if not, increase the size of a buffer to original
             self.shape[0] + ev.shape[0]
             Args:
@@ -157,7 +153,7 @@ class EventBuffer():
             self.i = i1 + 1
 
     def merge(self, ep1, ep2):
-        """ Resize tje EventBuffer and merge into the two EventBuffer ep1 nd ep2, sorted them with their timestamps
+        """ Resize the EventBuffer and merge into the two EventBuffers ep1 nd ep2, sorted by their timestamps
             Args:
                 ep1, ep2: eventBuffer
         """
@@ -190,8 +186,8 @@ class EventBuffer():
 
     def add(self, ts, y, x, p):
         """
-            Add an event (ts, x, y, p) the the EventBuffer (push strategy)
-            If y == -1, if means that x[0} contains the x position and x[1] the y's one
+            Add an event (ts, x, y, p) to the EventBuffer (push strategy)
+            If y == -1, if means that x[0] contains the x position and x[1] the y position.
             Args:
                 ts, y, x, p: new event array
         """
@@ -207,7 +203,7 @@ class EventBuffer():
 
     def add_array(self, ts, y, x, p, inc=1000):
         """
-            Add n event (ts, x, y, p) the the EventBuffer (push strategy)
+            Add n events (ts, x, y, p) to the EventBuffer (push strategy)
             Args:
                 ts, y, x, p: new event array
                 inc: increment size
@@ -217,29 +213,18 @@ class EventBuffer():
             self.increase(inc)
             self.add_array(ts, y, x, p)
         else:
-            self.ts[self.i:self.i+s] = ts
-            self.x[self.i:self.i+s] = x
-            self.y[self.i:self.i+s] = y
-            self.p[self.i:self.i+s] = p
+            self.ts[self.i:self.i + s] = ts
+            self.x[self.i:self.i + s] = x
+            self.y[self.i:self.i + s] = y
+            self.p[self.i:self.i + s] = p
             self.i += s
 
-    def write(self, filename, event_type='dvs', width=None, height=None):
-        """ Write the events into a .dat or .es file
+    def write(self, filename, width=None, height=None):
+        """ Write the events into a .dat file
             Args:
                 filename: path of the file
         """
         # sort events to have a monotonically timestamps
         self.sort()
-
-        ext = os.path.splitext(filename)[1]
-        if ext == '.dat':
-            write_event_dat(filename, self.ts[:self.i], self.x[:self.i],
-                            self.y[:self.i], self.p[:self.i],
-                            event_type=event_type, width=width, height=height)
-        elif ext == '.es':
-            write_event_es(filename, self.ts[:self.i], self.x[:self.i],
-                           self.y[:self.i], self.p[:self.i],
-                           event_type=event_type, width=width, height=height)
-        elif ext == '.csv':
-            write_event_csv(filename, self.ts[:self.i], self.x[:self.i],
-                            self.y[:self.i], self.p[:self.i])
+        write_event_dat(filename, self.ts[:self.i], self.x[:self.i], self.y[:self.i], self.p[:self.i],
+                        event_type='dvs', width=width, height=height)
