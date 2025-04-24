@@ -17,17 +17,25 @@ This Figure summarizes the differences with others tools, such as
 
 ## -- Requirements -- 
 
-Tested on MacOS with Python 3.10, but there is no reason it should not work on Linux or Windows.
+Tested on MacOS and Windows with Python 3.10, but there is no reason it should not work on Linux.
 
-Create a virtual environment using conda on MacOS:
+
+Create a virtual environment using conda in MacOS:
 ```
 conda env create -f simuDVSICNS_MacOS.yml 
 conda activate IEBCS
 ```
 
+
 Create a virtual environment using conda in Linux:
 ```
 conda env create -f simuDVSICNS_Linux.yml 
+conda activate IEBCS
+```
+
+Create a virtual environment using conda in Windows:
+```
+conda env create -f simuDVSICNS_Windows.yml 
 conda activate IEBCS
 ```
 
