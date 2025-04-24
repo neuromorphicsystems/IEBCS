@@ -90,7 +90,9 @@ static PyObject * initNoise(PyObject *self, PyObject *args){
     }
     const double *pos_dist = (double *)PyArray_DATA((PyArrayObject *)pos_dist_array);
     const double *neg_dist = (double *)PyArray_DATA((PyArrayObject *)neg_dist_array);
-    mySimu->init_noise(pos_dist, neg_dist, pos_dist_shape[0]);
+    long shape = static_cast<long>(pos_dist_shape[0]);
+    mySimu->init_noise(pos_dist, neg_dist, shape);
+    // mySimu->init_noise(pos_dist, neg_dist, pos_dist_shape[0]);
     Py_DECREF(pos_dist_array);
     Py_DECREF(neg_dist_array);
     return Py_True;
